@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Ventas - TiendaOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="display-5">
+                        <i class="fas fa-chart-line me-3 text-primary"></i>Reporte de Ventas
+                    </h1>
+                    <p class="text-muted mb-0">Análisis detallado con MongoDB Aggregation</p>
+                </div>
+                <div>
+                    <a href="{% url 'descargar_reporte_pdf' %}?{{ request.GET.urlencode }}" 
+                       class="btn btn-danger btn-lg">
+                        <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Filtros Avanzados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros de Consulta (MongoDB Aggregation)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{% url 'reporte_ventas' %}">
+                        <div class="row g-3">
+                            <!-- Fechas -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-2 text-primary"></i>Fecha Inicio
+                                </label>
+                                <input type="date" class="form-control" name="fecha_inicio" 
+                                       value="{{ fecha_inicio }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-2 text-primary"></i>Fecha Fin
+                                </label>
+                                <input type="date" class="form-control" name="fecha_fin" 
+                                       value="{{ fecha_fin }}">
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-flag me-2 text-primary"></i>Estado
+                                </label>
+                                <select class="form-select" name="estado">
+                                    <option value="">Todos</option>
+                                    <option value="completada" {% if estado_filtro == 'completada' %}selected{% endif %}>
+                                        Completada
+                                    </option>
+                                    <option value="pendiente" {% if estado_filtro == 'pendiente' %}selected{% endif %}>
+                                        Pendiente
+                                    </option>
+                                    <option value="cancelada" {% if estado_filtro == 'cancelada' %}selected{% endif %}>
+                                        Cancelada
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Método de Pago -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-credit-card me-2 text-primary"></i>Método de Pago
+                                </label>
+                                <select class="form-select" name="metodo_pago">
+                                    <option value="">Todos</option>
+                                    {% for metodo in metodos_pago_disponibles %}
+                                    <option value="{{ metodo }}" {% if metodo_pago_filtro == metodo %}selected{% endif %}>
+                                        {{ metodo }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Monto Mínimo -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-dollar-sign me-2 text-primary"></i>Monto Mínimo
+                                </label>
+                                <input type="number" class="form-control" name="monto_minimo" 
+                                       placeholder="Ej: 100" step="0.01" value="{{ monto_minimo }}">
+                            </div>
+
+                            <!-- Monto Máximo -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-dollar-sign me-2 text-primary"></i>Monto Máximo
+                                </label>
+                                <input type="number" class="form-control" name="monto_maximo" 
+                                       placeholder="Ej: 1000" step="0.01" value="{{ monto_maximo }}">
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-2"></i>Aplicar Filtros
+                                </button>
+                                <a href="{% url 'reporte_ventas' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-2"></i>Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Generales -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Total Ventas</p>
+                            <h3 class="mb-0">{{ total_ventas }}</h3>
+                        </div>
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-shopping-cart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Ingresos Totales</p>
+                            <h3 class="mb-0 text-success">${{ total_ingresos|floatformat:2 }}</h3>
+                        </div>
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Ticket Promedio</p>
+                            <h3 class="mb-0 text-info">${{ promedio_venta|floatformat:2 }}</h3>
+                        </div>
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-receipt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Productos Vendidos</p>
+                            <h3 class="mb-0 text-warning">{{ total_productos_vendidos }}</h3>
+                        </div>
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-box fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventas por Estado -->
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm border-0 border-start border-success border-5">
+                <div class="card-body">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>Completadas
+                    </h6>
+                    <h3 class="mb-1">{{ ventas_completadas }}</h3>
+                    <small class="text-success">${{ ingresos_completadas|floatformat:2 }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm border-0 border-start border-warning border-5">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-clock me-2"></i>Pendientes
+                    </h6>
+                    <h3 class="mb-1">{{ ventas_pendientes }}</h3>
+                    <small class="text-warning">${{ ingresos_pendientes|floatformat:2 }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm border-0 border-start border-danger border-5">
+                <div class="card-body">
+                    <h6 class="text-danger mb-3">
+                        <i class="fas fa-times-circle me-2"></i>Canceladas
+                    </h6>
+                    <h3 class="mb-1">{{ ventas_canceladas }}</h3>
+                    <small class="text-muted">Sin ingresos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Productos y Métodos de Pago -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2 text-warning"></i>Top 5 Productos Más Vendidos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if top_productos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Ingresos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in top_productos %}
+                                <tr>
+                                    <td><strong>{{ forloop.counter }}</strong></td>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ producto.total_vendido }}</span>
+                                    </td>
+                                    <td class="text-end text-success">
+                                        <strong>${{ producto.ingresos_producto|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-3">No hay datos disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-credit-card me-2 text-info"></i>Ventas por Método de Pago
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ventas_por_metodo %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Método</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metodo in ventas_por_metodo %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-credit-card me-2 text-primary"></i>
+                                        <strong>{{ metodo.metodo }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ metodo.cantidad }}</span>
+                                    </td>
+                                    <td class="text-end text-success">
+                                        <strong>${{ metodo.total|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-3">No hay datos disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Ventas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2 text-primary"></i>
+                        Listado de Ventas ({{ total_ventas }} registros)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ventas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th class="text-center">Items</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for venta in ventas %}
+                                <tr>
+                                    <td><strong>{{ venta.numero_factura }}</strong></td>
+                                    <td>{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ venta.usuario_nombre }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ venta.cantidad_productos }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">${{ venta.total|floatformat:2 }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if venta.estado == 'completada' %}
+                                        <span class="badge bg-success">Completada</span>
+                                        {% elif venta.estado == 'pendiente' %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'ver_factura' venta.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No se encontraron ventas con los filtros aplicados</p>
+                        <a href="{% url 'reporte_ventas' %}" class="btn btn-primary">
+                            <i class="fas fa-redo me-2"></i>Ver Todas las Ventas
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

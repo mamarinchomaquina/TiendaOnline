@@ -1,0 +1,1031 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - TiendaOnline{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+
+    {% if es_admin %}
+    <!-- ========================================== -->
+    <!-- DASHBOARD COMPLETO PARA ADMINISTRADORES -->
+    <!-- ========================================== -->
+    <div class="admin-dashboard">
+        <div class="dashboard-overlay">
+            <div class="container py-5" style="margin-top: 76px;">
+                <!-- Header del Dashboard -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="mb-3 mb-md-0">
+                                <h1 class="display-4 mb-2">
+                                    <i class="fas fa-tachometer-alt me-3 text-primary"></i>Dashboard Administrativo
+                                </h1>
+                                <p class="text-muted mb-0">
+                                    <i class="far fa-calendar-alt me-2"></i>{{ "now"|date:"l, d \d\e F \d\e Y" }}
+                                </p>
+                            </div>
+                            <div>
+                                <a href="{% url 'agregar_producto' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus-circle me-2"></i>Agregar Producto
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de Estadísticas -->
+                <div class="row mb-5">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card shadow-lg border-0 stat-card" style="border-left: 4px solid #2563eb !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1 text-uppercase small fw-bold">Total Productos</p>
+                                        <h2 class="mb-0 fw-bold">{{ total_productos }}</h2>
+                                    </div>
+                                    <div class="stat-icon bg-primary">
+                                        <i class="fas fa-box fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>12% vs mes anterior
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card shadow-lg border-0 stat-card" style="border-left: 4px solid #10b981 !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1 text-uppercase small fw-bold">Ventas del Mes</p>
+                                        <h2 class="mb-0 fw-bold">{{ ventas_mes }}</h2>
+                                    </div>
+                                    <div class="stat-icon bg-success">
+                                        <i class="fas fa-shopping-cart fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>{{ crecimiento_ventas|floatformat:1 }}% vs mes anterior
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card shadow-lg border-0 stat-card" style="border-left: 4px solid #f59e0b !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1 text-uppercase small fw-bold">Comentarios</p>
+                                        <h2 class="mb-0 fw-bold">{{ total_comentarios }}</h2>
+                                    </div>
+                                    <div class="stat-icon bg-warning">
+                                        <i class="fas fa-comments fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-warning">
+                                        <i class="fas fa-star me-1"></i>4.8 promedio
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card shadow-lg border-0 stat-card" style="border-left: 4px solid #06b6d4 !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1 text-uppercase small fw-bold">Ingresos</p>
+                                        <h2 class="mb-0 fw-bold">${{ ingresos_mes|floatformat:0 }}</h2>
+                                    </div>
+                                    <div class="stat-icon bg-info">
+                                        <i class="fas fa-dollar-sign fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="{% if crecimiento_ingresos >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        <i class="fas fa-arrow-{% if crecimiento_ingresos >= 0 %}up{% else %}down{% endif %} me-1"></i>
+                                        {{ crecimiento_ingresos|floatformat:1 }}% vs mes anterior
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparador de Ingresos -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2 text-primary"></i>Comparación de Ingresos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Gráfico de Barras -->
+                                    <div class="col-lg-6 mb-4 mb-lg-0">
+                                        <div class="chart-container" style="height: 300px;">
+                                            <canvas id="incomeComparisonChart"></canvas>
+                                        </div>
+                                    </div>
+
+                                    <!-- Métricas de Comparación -->
+                                    <div class="col-lg-6">
+                                        <div class="row">
+                                            <!-- Mes Actual -->
+                                            <div class="col-12 mb-3">
+                                                <div class="card border-0 bg-light">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <p class="text-muted mb-1 text-uppercase" style="font-size: 0.75rem; font-weight: 600;">
+                                                                    {{ nombre_mes_actual }} (Actual)
+                                                                </p>
+                                                                <h3 class="mb-0 text-primary">${{ ingresos_mes_actual|floatformat:2 }}</h3>
+                                                                <small class="text-muted">{{ ventas_mes_actual }} ventas</small>
+                                                            </div>
+                                                            <div>
+                                                                <i class="fas fa-calendar-check fa-2x text-primary"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mes Anterior -->
+                                            <div class="col-12 mb-3">
+                                                <div class="card border-0 bg-light">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <p class="text-muted mb-1 text-uppercase" style="font-size: 0.75rem; font-weight: 600;">
+                                                                    {{ nombre_mes_anterior }} (Anterior)
+                                                                </p>
+                                                                <h3 class="mb-0 text-secondary">${{ ingresos_mes_anterior|floatformat:2 }}</h3>
+                                                                <small class="text-muted">{{ ventas_mes_anterior }} ventas</small>
+                                                            </div>
+                                                            <div>
+                                                                <i class="fas fa-calendar fa-2x text-secondary"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Crecimiento -->
+                                            <div class="col-12">
+                                                <div class="card border-0 {% if crecimiento_ingresos >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                                    <div class="card-body">
+                                                        <div class="text-center">
+                                                            <p class="mb-2 text-uppercase" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">
+                                                                Crecimiento
+                                                            </p>
+                                                            <h2 class="mb-0">
+                                                                {% if crecimiento_ingresos >= 0 %}
+                                                                    <i class="fas fa-arrow-up me-2"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-arrow-down me-2"></i>
+                                                                {% endif %}
+                                                                {{ crecimiento_ingresos|floatformat:1 }}%
+                                                            </h2>
+                                                            <small style="opacity: 0.9;">
+                                                                {% if crecimiento_ingresos >= 0 %}
+                                                                    Mejor desempeño que el mes anterior
+                                                                {% else %}
+                                                                    Menor desempeño que el mes anterior
+                                                                {% endif %}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Estadísticas Adicionales -->
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h5 class="mb-0 text-primary">
+                                                        {% if crecimiento_ventas >= 0 %}+{% endif %}{{ crecimiento_ventas|floatformat:1 }}%
+                                                    </h5>
+                                                    <small class="text-muted">Crecimiento Ventas</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h5 class="mb-0 text-success">
+                                                        {% if ventas_mes_actual > 0 %}
+                                                            ${{ ingresos_mes_actual|floatformat:0 }}
+                                                        {% else %}
+                                                            $0
+                                                        {% endif %}
+                                                    </h5>
+                                                    <small class="text-muted">Ticket Promedio</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Proyección -->
+                                {% if crecimiento_ingresos > 0 %}
+                                <div class="alert alert-info mt-4 mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Proyección:</strong> Si mantienes este ritmo, podrías superar los 
+                                    <strong>${{ ingresos_mes_actual|floatformat:0 }}</strong> al final del mes.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico y Acciones Rápidas -->
+                <div class="row mb-5">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-lg border-0 h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2 text-primary"></i>Ventas del Último Mes
+                                </h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active">Mes</button>
+                                    <button class="btn btn-outline-primary">Semana</button>
+                                    <button class="btn btn-outline-primary">Día</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesChart" height="80"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-lg border-0 h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-bolt me-2 text-warning"></i>Acciones Rápidas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-3">
+                                    <a href="{% url 'ver_productos' %}" class="btn btn-outline-primary text-start">
+                                        <i class="fas fa-box me-2"></i>Ver Productos
+                                    </a>
+                                    <a href="{% url 'agregar_producto' %}" class="btn btn-outline-success text-start">
+                                        <i class="fas fa-plus me-2"></i>Agregar Producto
+                                    </a>
+                                    <a href="{% url 'reporte_ventas' %}" class="btn btn-outline-danger text-start">
+                                        <i class="fas fa-chart-bar me-2"></i>Reportes
+                                    </a>
+                                    <a href="{% url 'ver_auditoria' %}" class="btn btn-outline-warning text-start">
+                                        <i class="fas fa-clipboard-list me-2"></i>Auditoría
+                                    </a>
+                                    <a href="{% url 'todos_comentarios' %}" class="btn btn-outline-secondary text-start">
+                                        <i class="fas fa-comments me-2"></i>Comentarios
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos Destacados y Actividad Reciente -->
+                <div class="row mb-5">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-lg border-0 h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-fire me-2 text-danger"></i>Productos Más Vendidos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="rounded" style="width: 60px; height: 60px; background: linear-gradient(135deg, #2563eb, #3b82f6); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-laptop text-white fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">Laptop HP Pavilion</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tag me-1"></i>Electrónica
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-success fs-5">$899</div>
+                                            <small class="text-muted">45 ventas</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="rounded" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-mobile-alt text-white fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">iPhone 15 Pro</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tag me-1"></i>Smartphones
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-success fs-5">$1299</div>
+                                            <small class="text-muted">38 ventas</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="rounded" style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-headphones text-white fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">AirPods Pro</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tag me-1"></i>Audio
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-success fs-5">$249</div>
+                                            <small class="text-muted">32 ventas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <a href="{% url 'ver_productos' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-right me-2"></i>Ver Todos los Productos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-lg border-0 h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2 text-info"></i>Actividad Reciente
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="timeline">
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-success"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1 fw-bold">
+                                                <i class="fas fa-check-circle me-1"></i>Nueva venta realizada
+                                            </h6>
+                                            <p class="text-muted small mb-0">iPhone 15 Pro vendido</p>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>Hace 5 minutos
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-primary"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1 fw-bold">
+                                                <i class="fas fa-plus-circle me-1"></i>Producto agregado
+                                            </h6>
+                                            <p class="text-muted small mb-0">Nuevo producto en el catálogo</p>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>Hace 1 hora
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-warning"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1 fw-bold">
+                                                <i class="fas fa-star me-1"></i>Nuevo comentario recibido
+                                            </h6>
+                                            <p class="text-muted small mb-0">Calificación: 5 estrellas</p>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>Hace 3 horas
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-info"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1 fw-bold">
+                                                <i class="fas fa-user-edit me-1"></i>Perfil actualizado
+                                            </h6>
+                                            <p class="text-muted small mb-0">Información personal modificada</p>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>Hace 1 día
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de Comentarios -->
+                <div class="row" id="commentForm">
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comment-dots me-2"></i>Deja tu Comentario
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{% url 'guardar_comentario' %}">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="comentario" class="form-label fw-bold">
+                                                <i class="fas fa-pen me-2 text-primary"></i>Tu Comentario
+                                            </label>
+                                            <textarea class="form-control form-control-lg" 
+                                                      id="comentario" 
+                                                      name="comentario" 
+                                                      rows="4" 
+                                                      required
+                                                      placeholder="Comparte tu experiencia con nosotros..."></textarea>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="calificacion" class="form-label fw-bold">
+                                                <i class="fas fa-star me-2 text-warning"></i>Calificación
+                                            </label>
+                                            <select class="form-select form-select-lg" id="calificacion" name="calificacion" required>
+                                                <option value="">Selecciona...</option>
+                                                <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                                                <option value="4">⭐⭐⭐⭐ Muy Bueno</option>
+                                                <option value="3">⭐⭐⭐ Bueno</option>
+                                                <option value="2">⭐⭐ Regular</option>
+                                                <option value="1">⭐ Malo</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+                                                <i class="fas fa-paper-plane me-2"></i>Enviar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts para gráficos (Solo Admin) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de Ventas del Mes
+        const salesCtx = document.getElementById('salesChart');
+        if (salesCtx) {
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ labels_ventas|safe }},
+                    datasets: [{
+                        label: 'Ventas',
+                        data: {{ datos_ventas|safe }},
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#2563eb',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Comparación de Ingresos
+        const incomeComparisonCtx = document.getElementById('incomeComparisonChart');
+        if (incomeComparisonCtx) {
+            new Chart(incomeComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['{{ nombre_mes_anterior }}', '{{ nombre_mes_actual }}'],
+                    datasets: [
+                        {
+                            label: 'Ingresos',
+                            data: [{{ ingresos_mes_anterior }}, {{ ingresos_mes_actual }}],
+                            backgroundColor: ['rgba(100, 116, 139, 0.8)', 'rgba(37, 99, 235, 0.8)'],
+                            borderColor: ['#64748b', '#2563eb'],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barThickness: 60
+                        },
+                        {
+                            label: 'Ventas',
+                            data: [{{ ventas_mes_anterior }}, {{ ventas_mes_actual }}],
+                            backgroundColor: ['rgba(251, 146, 60, 0.3)', 'rgba(16, 185, 129, 0.3)'],
+                            borderColor: ['#fb923c', '#10b981'],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barThickness: 40,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.dataset.label === 'Ingresos') {
+                                        label += '$' + context.parsed.y.toFixed(2);
+                                    } else {
+                                        label += context.parsed.y + ' ventas';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' ventas';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+    </script>
+
+    {% else %}
+    <!-- ========================================== -->
+    <!-- PÁGINA SIMPLE PARA CLIENTES -->
+    <!-- ========================================== -->
+    <div class="client-page">
+        <div class="client-overlay">
+            <div class="container py-5" style="margin-top: 76px;">
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <h1 class="display-4 mb-3">
+                            <i class="fas fa-store me-3 text-primary"></i>Bienvenido, {{ usuario }}
+                        </h1>
+                        <p class="lead text-muted">¿Qué deseas hacer hoy?</p>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas para Clientes -->
+                <div class="row g-4 mb-5">
+                    <!-- Ver Productos -->
+                    <div class="col-md-4">
+                        <div class="card shadow-lg border-0 h-100 hover-card">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-shopping-bag fa-4x text-primary"></i>
+                                </div>
+                                <h3 class="mb-3">Catálogo de Productos</h3>
+                                <p class="text-muted mb-4">Explora nuestra amplia selección de productos</p>
+                                <a href="{% url 'ver_productos' %}" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-arrow-right me-2"></i>Ver Productos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mi Carrito -->
+                    <div class="col-md-4">
+                        <div class="card shadow-lg border-0 h-100 hover-card">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-shopping-cart fa-4x text-success"></i>
+                                </div>
+                                <h3 class="mb-3">Mi Carrito</h3>
+                                <p class="text-muted mb-4">Revisa y finaliza tu compra</p>
+                                <a href="{% url 'ver_carrito' %}" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-arrow-right me-2"></i>Ver Carrito
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mis Compras -->
+                    <div class="col-md-4">
+                        <div class="card shadow-lg border-0 h-100 hover-card">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-receipt fa-4x text-info"></i>
+                                </div>
+                                <h3 class="mb-3">Mis Compras</h3>
+                                <p class="text-muted mb-4">Historial de pedidos y facturas</p>
+                                <a href="{% url 'mis_compras' %}" class="btn btn-info btn-lg w-100">
+                                    <i class="fas fa-arrow-right me-2"></i>Ver Historial
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Comentarios -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comment-dots me-2"></i>Deja tu Opinión
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{% url 'guardar_comentario' %}">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="comentario" class="form-label fw-bold">
+                                                <i class="fas fa-pen me-2 text-primary"></i>Tu Comentario
+                                            </label>
+                                            <textarea class="form-control form-control-lg" 
+                                                      id="comentario" 
+                                                      name="comentario" 
+                                                      rows="4" 
+                                                      required
+                                                      placeholder="Comparte tu experiencia con nosotros..."></textarea>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="calificacion" class="form-label fw-bold">
+                                                <i class="fas fa-star me-2 text-warning"></i>Calificación
+                                            </label>
+                                            <select class="form-select form-select-lg" id="calificacion" name="calificacion" required>
+                                                <option value="">Selecciona...</option>
+                                                <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                                                <option value="4">⭐⭐⭐⭐ Muy Bueno</option>
+                                                <option value="3">⭐⭐⭐ Bueno</option>
+                                                <option value="2">⭐⭐ Regular</option>
+                                                <option value="1">⭐ Malo</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+                                                <i class="fas fa-paper-plane me-2"></i>Enviar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% else %}
+<!-- Hero Section para usuarios no autenticados -->
+<div class="hero-section">
+    <div class="hero-overlay">
+        <div class="container">
+            <div class="hero-content text-center">
+                <h1 class="hero-title display-3 fw-bold mb-4">
+                    <i class="fas fa-shopping-cart me-3"></i>Bienvenido a TiendaOnline
+                </h1>
+                <p class="hero-subtitle lead mb-5">
+                    Tu tienda de confianza para encontrar los mejores productos al mejor precio
+                </p>
+                <div class="hero-buttons">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    /* Timeline mejorada */
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        padding-bottom: 25px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+
+    .timeline-content {
+        background: rgba(248, 250, 252, 0.8);
+        padding: 15px;
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+    }
+
+    /* Iconos animados */
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: rotate(10deg) scale(1.1);
+    }
+
+    /* Estilos base para cards */
+    .card {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .hover-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .hover-card:hover i {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 0;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        animation: fadeInUp 1s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-title {
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        color: white !important;
+    }
+
+    .hero-subtitle {
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        color: white !important;
+    }
+
+    .hero-section .btn {
+        padding: 15px 40px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-section .btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        border: none;
+    }
+
+    .hero-section .btn-primary:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.5);
+    }
+
+    .hero-section .btn-outline-light {
+        border: 2px solid white;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-section .btn-outline-light:hover {
+        transform: translateY(-5px);
+        background: white;
+        color: #2563eb;
+        box-shadow: 0 12px 30px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Overlay para admin y cliente */
+    main {
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(8px);
+        min-height: calc(100vh - 76px);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem !important;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem !important;
+        }
+
+        .hero-section .btn {
+            padding: 12px 30px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-title {
+            font-size: 2rem !important;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .hero-buttons .btn {
+            width: 100%;
+            margin: 0 !important;
+        }
+    }
+</style>
+
+<script>
+    // ✅ APLICAR FONDOS CON JAVASCRIPT
+    document.addEventListener('DOMContentLoaded', function() {
+        const body = document.body;
+        const footer = document.querySelector('footer');
+        
+        {% if user.is_authenticated %}
+            {% if es_admin %}
+                // Dashboard Admin
+                body.style.background = "linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(16, 185, 129, 0.03) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80') fixed center/cover";
+                body.style.backgroundSize = "cover";
+                body.style.backgroundAttachment = "fixed";
+                console.log('✅ Fondo de Admin aplicado');
+            {% else %}
+                // Cliente
+                body.style.background = "linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1920&q=80') fixed center/cover";
+                body.style.backgroundSize = "cover";
+                body.style.backgroundAttachment = "fixed";
+                console.log('✅ Fondo de Cliente aplicado');
+            {% endif %}
+        {% else %}
+            // Hero Section - No autenticado
+            body.style.background = "linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(16, 185, 129, 0.9) 100%), url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80') center/cover fixed";
+            body.style.backgroundSize = "cover";
+            body.style.backgroundAttachment = "fixed";
+            
+            // Ocultar footer en hero
+            if (footer) {
+                footer.style.display = 'none';
+            }
+            console.log('✅ Fondo de Hero aplicado');
+        {% endif %}
+    });
+</script>
+
+{% endblock %}

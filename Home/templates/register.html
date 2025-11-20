@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrarse{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-lg">
+                <div class="card-header text-center py-4">
+                    <i class="fas fa-user-plus fa-3x text-white mb-3"></i>
+                    <h3 class="mb-0">Crear Cuenta Nueva</h3>
+                </div>
+                <div class="card-body p-5">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user me-2 text-primary"></i>Nombre
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="nombre" 
+                                       name="nombre" 
+                                       required 
+                                       placeholder="Juan">
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <label for="apellidos" class="form-label">
+                                    <i class="fas fa-user-tag me-2 text-primary"></i>Apellidos
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="apellidos" 
+                                       name="apellidos" 
+                                       required 
+                                       placeholder="Pérez García">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="edad" class="form-label">
+                                <i class="fas fa-calendar me-2 text-primary"></i>Edad
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg" 
+                                   id="edad" 
+                                   name="edad" 
+                                   required 
+                                   min="1" 
+                                   max="120" 
+                                   placeholder="25">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="correo" class="form-label">
+                                <i class="fas fa-envelope me-2 text-primary"></i>Correo Electrónico
+                            </label>
+                            <input type="email" 
+                                   class="form-control form-control-lg" 
+                                   id="correo" 
+                                   name="correo" 
+                                   required 
+                                   placeholder="tu@email.com">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="contraseña" class="form-label">
+                                <i class="fas fa-lock me-2 text-primary"></i>Contraseña
+                            </label>
+                            <input type="password" 
+                                   class="form-control form-control-lg" 
+                                   id="contraseña" 
+                                   name="contraseña" 
+                                   required 
+                                   placeholder="••••••••">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Mínimo 8 caracteres
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <hr class="my-4">
+                        <p class="mb-0">¿Ya tienes cuenta? 
+                            <a href="{% url 'login' %}" class="text-decoration-none fw-bold">
+                                <i class="fas fa-sign-in-alt me-1"></i>Inicia sesión aquí
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

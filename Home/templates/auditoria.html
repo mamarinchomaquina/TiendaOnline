@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+{% block title %}Auditoría del Sistema - TiendaOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="display-5">
+                        <i class="fas fa-clipboard-list me-3 text-warning"></i>Auditoría del Sistema
+                    </h1>
+                    <p class="text-muted mb-0">Registro completo de todas las operaciones</p>
+                </div>
+                <div>
+                    <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{% url 'ver_auditoria' %}">
+                        <div class="row g-3">
+                            <!-- Acción -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-bolt me-2 text-warning"></i>Tipo de Acción
+                                </label>
+                                <select class="form-select" name="accion">
+                                    <option value="">Todas las acciones</option>
+                                    {% for accion in acciones_unicas %}
+                                    <option value="{{ accion }}" {% if accion_filtro == accion %}selected{% endif %}>
+                                        {{ accion }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Usuario -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-user me-2 text-primary"></i>Usuario
+                                </label>
+                                <input type="text" class="form-control" name="usuario" 
+                                       placeholder="Buscar por email" value="{{ usuario_filtro }}">
+                            </div>
+
+                            <!-- Fecha Inicio -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-2 text-success"></i>Fecha Inicio
+                                </label>
+                                <input type="date" class="form-control" name="fecha_inicio" 
+                                       value="{{ fecha_inicio }}">
+                            </div>
+
+                            <!-- Fecha Fin -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-2 text-success"></i>Fecha Fin
+                                </label>
+                                <input type="date" class="form-control" name="fecha_fin" 
+                                       value="{{ fecha_fin }}">
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-warning w-100 me-2">
+                                    <i class="fas fa-search me-2"></i>Buscar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <a href="{% url 'ver_auditoria' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-redo me-2"></i>Limpiar Filtros
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Auditoría -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2 text-info"></i>Top 5 Acciones Más Frecuentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if top_acciones %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="10%">#</th>
+                                    <th width="60%">Acción</th>
+                                    <th width="30%" class="text-center">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for accion in top_acciones %}
+                                <tr>
+                                    <td><strong>{{ forloop.counter }}</strong></td>
+                                    <td>
+                                        {% if accion.nombre == 'LOGIN' %}
+                                            <i class="fas fa-sign-in-alt me-2 text-success"></i>
+                                        {% elif accion.nombre == 'LOGOUT' %}
+                                            <i class="fas fa-sign-out-alt me-2 text-danger"></i>
+                                        {% elif accion.nombre == 'CREAR_VENTA' %}
+                                            <i class="fas fa-shopping-cart me-2 text-primary"></i>
+                                        {% elif accion.nombre == 'CREAR_PRODUCTO' %}
+                                            <i class="fas fa-plus-circle me-2 text-info"></i>
+                                        {% elif accion.nombre == 'AGREGAR_CARRITO' %}
+                                            <i class="fas fa-cart-plus me-2 text-warning"></i>
+                                        {% else %}
+                                            <i class="fas fa-bolt me-2 text-secondary"></i>
+                                        {% endif %}
+                                        <strong>{{ accion.nombre }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">{{ accion.cantidad }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-3">No hay datos disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-success"></i>Resumen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Total Registros</p>
+                            <h3 class="mb-0 text-primary">{{ total_registros }}</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-database fa-3x text-primary opacity-25"></i>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Acciones Únicas</p>
+                            <h3 class="mb-0 text-success">{{ acciones_unicas|length }}</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-bolt fa-3x text-success opacity-25"></i>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase small">Mostrando</p>
+                            <h3 class="mb-0 text-info">{{ registros|length }}</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-list fa-3x text-info opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Registros de Auditoría -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-ul me-2 text-primary"></i>
+                        Registros de Auditoría (Últimos 100)
+                    </h5>
+                    <span class="badge bg-primary">{{ registros|length }} registros</span>
+                </div>
+                <div class="card-body">
+                    {% if registros %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="15%">Fecha y Hora</th>
+                                    <th width="15%">Acción</th>
+                                    <th width="20%">Usuario</th>
+                                    <th width="50%">Detalle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registro in registros %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="far fa-calendar me-1"></i>
+                                            {{ registro.fecha_hora|date:"d/m/Y" }}
+                                            <br>
+                                            <i class="far fa-clock me-1"></i>
+                                            {{ registro.fecha_hora|date:"H:i:s" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if registro.accion == 'LOGIN' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-sign-in-alt me-1"></i>LOGIN
+                                            </span>
+                                        {% elif registro.accion == 'LOGOUT' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-sign-out-alt me-1"></i>LOGOUT
+                                            </span>
+                                        {% elif registro.accion == 'REGISTRO' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-user-plus me-1"></i>REGISTRO
+                                            </span>
+                                        {% elif registro.accion == 'CREAR_VENTA' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-shopping-cart me-1"></i>VENTA
+                                            </span>
+                                        {% elif registro.accion == 'CREAR_PRODUCTO' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-plus-circle me-1"></i>PRODUCTO
+                                            </span>
+                                        {% elif registro.accion == 'AGREGAR_CARRITO' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-cart-plus me-1"></i>CARRITO
+                                            </span>
+                                        {% elif registro.accion == 'REMOVER_CARRITO' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-trash me-1"></i>REMOVER
+                                            </span>
+                                        {% elif registro.accion == 'ACTUALIZAR_STOCK' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-boxes me-1"></i>STOCK
+                                            </span>
+                                        {% elif registro.accion == 'CREAR_COMENTARIO' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-comment me-1"></i>COMENTARIO
+                                            </span>
+                                        {% elif registro.accion == 'ACTUALIZAR_PERFIL' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-user-edit me-1"></i>PERFIL
+                                            </span>
+                                        {% elif registro.accion == 'VACIAR_CARRITO' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-trash-alt me-1"></i>VACIAR
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-bolt me-1"></i>{{ registro.accion }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-user me-1 text-primary"></i>
+                                        <small>{{ registro.usuario_responsable }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ registro.detalle }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Los registros de auditoría se mantienen de forma permanente y no pueden ser eliminados.
+                        Solo se muestran los últimos 100 registros por defecto. Usa los filtros para buscar registros específicos.
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No se encontraron registros con los filtros aplicados</p>
+                        <a href="{% url 'ver_auditoria' %}" class="btn btn-warning">
+                            <i class="fas fa-redo me-2"></i>Ver Todos los Registros
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-weight: 600;
+    }
+
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .form-select:focus,
+    .form-control:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #000;
+        font-weight: 600;
+    }
+
+    .btn-warning:hover {
+        background-color: #ffb300;
+        border-color: #ffb300;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .table-dark {
+        background-color: #343a40;
+    }
+
+    .table-dark th {
+        border-color: #454d55;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 768px) {
+        .table {
+            font-size: 0.875rem;
+        }
+
+        .badge {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}

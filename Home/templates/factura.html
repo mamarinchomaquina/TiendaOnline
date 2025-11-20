@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Factura {{ venta.numero_factura }} - TiendaOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5">
+                        <i class="fas fa-file-invoice me-3 text-success"></i>Factura
+                    </h1>
+                    <p class="text-muted mb-0">{{ venta.numero_factura }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'descargar_factura_pdf' venta.id %}" class="btn btn-danger btn-lg">
+                        <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta de éxito -->
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>¡Compra realizada con éxito!</strong> Tu pedido ha sido procesado correctamente.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <!-- Encabezado de la factura -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <h2 class="text-primary mb-3">
+                                <i class="fas fa-shopping-cart me-2"></i>TiendaOnline
+                            </h2>
+                            <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>Dirección de tu tienda</p>
+                            <p class="mb-1"><i class="fas fa-phone me-2"></i>+57 123 456 7890</p>
+                            <p class="mb-0"><i class="fas fa-envelope me-2"></i>info@tienda.com</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h3 class="mb-3">FACTURA</h3>
+                            <p class="mb-1"><strong>No:</strong> {{ venta.numero_factura }}</p>
+                            <p class="mb-1"><strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-1">
+                                <strong>Estado:</strong> 
+                                <span class="badge bg-success">{{ venta.estado|upper }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Datos del cliente -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user me-2"></i>Cliente
+                            </h5>
+                            <p class="mb-1"><strong>Nombre:</strong> {{ venta.usuario_nombre }}</p>
+                            <p class="mb-0"><strong>Email:</strong> {{ venta.usuario_email }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-credit-card me-2"></i>Pago
+                            </h5>
+                            <p class="mb-1"><strong>Método:</strong> {{ venta.metodo_pago }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de productos -->
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-box me-2"></i>Productos
+                    </h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in venta.productos %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td class="text-center">{{ producto.cantidad }}</td>
+                                    <td class="text-end">${{ producto.precio_unitario|floatformat:2 }}</td>
+                                    <td class="text-end"><strong>${{ producto.subtotal|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totales -->
+                    <div class="row">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-end">Subtotal:</td>
+                                        <td class="text-end"><strong>${{ venta.subtotal|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-end">IVA (16%):</td>
+                                        <td class="text-end"><strong>${{ venta.impuesto|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td class="text-end"><h5 class="mb-0">TOTAL:</h5></td>
+                                        <td class="text-end"><h4 class="mb-0 text-success">${{ venta.total|floatformat:2 }}</h4></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if venta.notas %}
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-comment me-2"></i>Notas
+                            </h5>
+                            <p class="text-muted">{{ venta.notas }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Pie de página -->
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Gracias por su compra
+                            </p>
+                            <p class="text-muted small mb-0">
+                                TiendaOnline © 2025 | www.tiendaonline.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Después del detalle de la factura, antes de las acciones -->
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <!-- Botón principal para descargar PDF -->
+        <a href="{% url 'descargar_factura_pdf' venta.id %}" 
+           class="btn btn-danger btn-lg me-3">
+            <i class="fas fa-file-pdf me-2"></i>Descargar Factura PDF
+        </a>
+        
+        <!-- Botón para imprimir -->
+        <button onclick="window.print()" class="btn btn-outline-primary btn-lg me-3">
+            <i class="fas fa-print me-2"></i>Imprimir Factura
+        </button>
+        
+        <!-- Botón volver -->
+        <a href="{% url 'mis_compras' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Mis Compras
+        </a>
+    </div>
+</div>
+
+<!-- Estilos para impresión -->
+<style media="print">
+    .navbar, .btn, footer {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+</style>
+
+            <!-- Acciones -->
+            <div class="text-center mt-4">
+                <a href="{% url 'mis_compras' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-list me-2"></i>Ver Mis Compras
+                </a>
+                <a href="{% url 'ver_productos' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-shopping-bag me-2"></i>Seguir Comprando
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

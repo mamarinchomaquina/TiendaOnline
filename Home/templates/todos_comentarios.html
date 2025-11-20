@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Todos los Comentarios{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <div class="section">
+        <div class="text-center mb-5">
+            <h1 class="section-title">
+                <i class="fas fa-comments me-2"></i>Todos los Comentarios
+            </h1>
+            <p class="section-subtitle">
+                Lee lo que nuestros clientes opinan sobre nuestra tienda
+            </p>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+                </a>
+            </div>
+        </div>
+        
+        {% if comentarios %}
+            <!-- Estadísticas -->
+            <div class="row mb-5">
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow text-center">
+                        <div class="card-body">
+                            <i class="fas fa-comments fa-3x text-primary mb-3"></i>
+                            <h3 class="mb-0">{{ comentarios|length }}</h3>
+                            <p class="text-muted mb-0">Total Comentarios</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow text-center">
+                        <div class="card-body">
+                            <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                            <h3 class="mb-0">4.5</h3>
+                            <p class="text-muted mb-0">Calificación Promedio</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow text-center">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-3x text-success mb-3"></i>
+                            <h3 class="mb-0">{{ comentarios|length }}</h3>
+                            <p class="text-muted mb-0">Usuarios Activos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comentarios -->
+            <div class="row">
+                {% for comentario in comentarios %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                {% if comentario.usuario.foto_perfil %}
+                                    <img src="{{ comentario.usuario.foto_perfil.url }}" 
+                                         alt="{{ comentario.usuario.first_name }}" 
+                                         class="rounded-circle me-3" 
+                                         style="width: 60px; height: 60px; object-fit: cover; border: 3px solid var(--primary-color);">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary me-3 d-flex align-items-center justify-content-center" 
+                                         style="width: 60px; height: 60px; border: 3px solid var(--primary-color);">
+                                        <i class="fas fa-user text-white fs-3"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">{{ comentario.usuario.first_name }} {{ comentario.usuario.last_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>{{ comentario.fecha|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="text-warning fs-4 me-2">{{ comentario.get_estrellas }}</span>
+                                    <span class="badge bg-primary">{{ comentario.calificacion }}/5</span>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text">{{ comentario.comentario }}</p>
+                            
+                            <div class="mt-3">
+                                {% if comentario.estado == 'activo' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-times-circle me-1"></i>Inactivo
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="alert alert-info text-center shadow">
+                        <i class="fas fa-comment-slash fa-4x mb-4 d-block"></i>
+                        <h4 class="alert-heading">¡No hay comentarios aún!</h4>
+                        <p class="mb-4">Sé el primero en dejar un comentario y compartir tu experiencia con nosotros.</p>
+                        <hr>
+                        <a href="{% url 'index' %}" class="btn btn-primary">
+                            <i class="fas fa-comment-medical me-2"></i>Dejar el Primer Comentario
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

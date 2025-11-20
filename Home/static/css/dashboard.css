@@ -1,0 +1,341 @@
+/* ===== DASHBOARD ESPECÍFICO - AZUL Y BLANCO ===== */
+
+/* Tarjetas de Estadísticas Mejoradas */
+.stat-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), transparent);
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.2) !important;
+    border-color: #2563eb;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Colores para stat-icon */
+.bg-primary {
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+/* Timeline Mejorado */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #2563eb, #3b82f6, #60a5fa);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -27px;
+    top: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid white;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-marker.bg-primary {
+    background: #2563eb;
+}
+
+.timeline-marker.bg-success {
+    background: #10b981;
+}
+
+.timeline-marker.bg-warning {
+    background: #f59e0b;
+}
+
+.timeline-marker.bg-info {
+    background: #06b6d4;
+}
+
+.timeline-content {
+    padding-left: 15px;
+}
+
+.timeline-content h6 {
+    font-size: 0.95rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.timeline-content p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+/* Gráfico */
+#salesChart {
+    max-height: 300px;
+}
+
+/* Botones de Acciones Rápidas */
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-info:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover {
+    transform: translateX(5px);
+    transition: all 0.3s ease;
+}
+
+/* Lista de Productos Destacados */
+.list-group-item {
+    background-color: white;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.list-group-item:hover {
+    background-color: #f8fafc;
+    transform: translateX(5px);
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Card Hover Effects */
+.card {
+    transition: all 0.3s ease;
+    background: white;
+    border: 1px solid #e2e8f0;
+}
+
+.card:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
+    border-color: #2563eb;
+}
+
+/* Card Headers */
+.card-header {
+    background: linear-gradient(135deg, #f8fafc, white);
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Mejoras para selectores y inputs */
+.form-select-lg,
+.form-control-lg {
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+.form-select-lg:focus,
+.form-control-lg:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    background-color: white;
+}
+
+/* Estadísticas con números grandes */
+.stat-card h2,
+.stat-card h3 {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.stat-card p,
+.stat-card small {
+    color: #64748b;
+}
+
+/* Badges en el dashboard */
+.badge {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+/* Botones del dashboard */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Progress bars (si las usas) */
+.progress {
+    background-color: #f1f5f9;
+    border-radius: 10px;
+    height: 8px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    border-radius: 10px;
+}
+
+/* Tablas en el dashboard */
+.table {
+    color: #1e293b;
+}
+
+.table thead th {
+    border-bottom: 2px solid #2563eb;
+    color: #1e293b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .timeline {
+        padding-left: 25px;
+    }
+    
+    .timeline-marker {
+        left: -23px;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .stat-icon i {
+        font-size: 1.5rem !important;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Hero section en el dashboard (si la usas) */
+.hero-dashboard {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.hero-dashboard h1,
+.hero-dashboard h2 {
+    color: white;
+}
+
+/* Iconos del dashboard */
+.dashboard-icon {
+    font-size: 2rem;
+    color: #2563eb;
+}
+
+/* Separadores */
+hr {
+    border-color: #e2e8f0;
+    opacity: 1;
+}
+
+/* Text colors específicos del dashboard */
+.text-stat-increase {
+    color: #10b981;
+}
+
+.text-stat-decrease {
+    color: #ef4444;
+}
+
+.text-stat-neutral {
+    color: #64748b;
+}

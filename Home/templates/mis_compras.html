@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Compras - TiendaOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5">
+                        <i class="fas fa-shopping-bag me-3 text-primary"></i>Mis Compras
+                    </h1>
+                    <p class="text-muted mb-0">Historial completo de tus pedidos</p>
+                </div>
+                <div>
+                    <a href="{% url 'ver_productos' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart me-2"></i>Seguir Comprando
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if ventas %}
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-bag fa-2x text-primary mb-2"></i>
+                    <h3 class="mb-0">{{ ventas|length }}</h3>
+                    <p class="text-muted mb-0">Compras Realizadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                    <h3 class="mb-0">${{ ventas|length|add:"0" }}</h3>
+                    <p class="text-muted mb-0">Total Gastado</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-box fa-2x text-info mb-2"></i>
+                    <h3 class="mb-0">{{ ventas.0.productos|length|default:0 }}</h3>
+                    <p class="text-muted mb-0">Última Compra</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de compras -->
+    <div class="row">
+        {% for venta in ventas %}
+        <div class="col-12 mb-4">
+            <div class="card shadow-lg border-0 compra-card">
+                <!-- Header de la tarjeta -->
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="fas fa-file-invoice me-2 text-primary"></i>
+                            <strong>{{ venta.numero_factura }}</strong>
+                        </h5>
+                        <small class="text-muted">
+                            <i class="far fa-calendar me-1"></i>
+                            {{ venta.fecha_venta|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if venta.estado == 'completada' %}
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="fas fa-check-circle me-1"></i>{{ venta.estado|upper }}
+                        </span>
+                        {% elif venta.estado == 'pendiente' %}
+                        <span class="badge bg-warning fs-6 px-3 py-2">
+                            <i class="fas fa-clock me-1"></i>{{ venta.estado|upper }}
+                        </span>
+                        {% elif venta.estado == 'cancelada' %}
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+                            <i class="fas fa-times-circle me-1"></i>{{ venta.estado|upper }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Body de la tarjeta -->
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Columna de productos -->
+                        <div class="col-md-8">
+                            <h6 class="mb-3 text-primary">
+                                <i class="fas fa-box me-2"></i>Productos ({{ venta.productos|length }})
+                            </h6>
+                            <div class="productos-list">
+                                {% for producto in venta.productos %}
+                                <div class="producto-item d-flex justify-content-between align-items-center py-3 border-bottom">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ producto.nombre }}</h6>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-hashtag me-1"></i>
+                                                Cantidad: <strong>{{ producto.cantidad }}</strong>
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-tag me-1"></i>
+                                                Precio Unit: <strong>${{ producto.precio_unitario|floatformat:2 }}</strong>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="text-success mb-0">
+                                            ${{ producto.subtotal|floatformat:2 }}
+                                        </h5>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Columna de resumen y acciones -->
+                        <div class="col-md-4">
+                            <!-- Resumen financiero -->
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body">
+                                    <h6 class="mb-3 text-primary">
+                                        <i class="fas fa-file-invoice-dollar me-2"></i>Resumen
+                                    </h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Subtotal:</span>
+                                        <span class="fw-bold">${{ venta.subtotal|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">IVA (16%):</span>
+                                        <span class="fw-bold">${{ venta.impuesto|floatformat:2 }}</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <strong class="fs-5">Total:</strong>
+                                        <strong class="fs-4 text-success">${{ venta.total|floatformat:2 }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="card border-0 bg-info bg-opacity-10 mb-3">
+                                <div class="card-body py-2">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-credit-card me-1"></i>
+                                        <strong>Pago:</strong> {{ venta.metodo_pago }}
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-box me-1"></i>
+                                        <strong>Items:</strong> {{ venta.productos|length }}
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'ver_factura' venta.id %}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-eye me-2"></i>Ver Factura Completa
+                                </a>
+                                
+                                <a href="{% url 'descargar_factura_pdf' venta.id %}" 
+                                   class="btn btn-danger">
+                                    <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                                </a>
+                                
+                                <button onclick="imprimirFactura('{{ venta.id }}')" 
+                                        class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-print me-2"></i>Imprimir
+                                </button>
+                                
+                                <button onclick="compartirFactura('{{ venta.numero_factura }}', '{{ venta.id }}')" 
+                                        class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-share-alt me-2"></i>Compartir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notas (si existen) -->
+                    {% if venta.notas %}
+                    <hr class="my-3">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-comment-dots me-2"></i>
+                        <strong>Notas de la compra:</strong> {{ venta.notas }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer con fecha -->
+                <div class="card-footer bg-white border-top">
+                    <small class="text-muted">
+                        <i class="far fa-clock me-1"></i>
+                        Comprado hace {{ venta.fecha_venta|timesince }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación (si implementas más adelante) -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <p class="text-muted">
+                Mostrando {{ ventas|length }} compra{{ ventas|length|pluralize }}
+            </p>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Sin compras -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 text-center py-5">
+                <div class="card-body">
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag fa-5x text-muted mb-4 opacity-50"></i>
+                        <h3 class="mb-3">No tienes compras aún</h3>
+                        <p class="text-muted mb-4 px-5">
+                            ¡Comienza a explorar nuestro catálogo y encuentra productos increíbles!<br>
+                            Todas tus compras aparecerán aquí.
+                        </p>
+                        <a href="{% url 'ver_productos' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-shopping-cart me-2"></i>Explorar Productos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Scripts -->
+<script>
+// Función para imprimir factura
+function imprimirFactura(ventaId) {
+    window.open("{% url 'ver_factura' 'TEMP_ID' %}".replace('TEMP_ID', ventaId), '_blank');
+    setTimeout(() => {
+        window.print();
+    }, 500);
+}
+
+// Función para compartir factura
+function compartirFactura(numeroFactura, ventaId) {
+    const url = window.location.origin + "{% url 'ver_factura' 'TEMP_ID' %}".replace('TEMP_ID', ventaId);
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Factura ' + numeroFactura,
+            text: 'Mi factura de compra en TiendaOnline',
+            url: url
+        }).catch((error) => console.log('Error al compartir:', error));
+    } else {
+        // Copiar al portapapeles
+        navigator.clipboard.writeText(url).then(() => {
+            alert('✅ Enlace copiado al portapapeles:\n' + url);
+        }).catch(() => {
+            // Fallback para navegadores sin clipboard API
+            const input = document.createElement('input');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            alert('✅ Enlace copiado al portapapeles');
+        });
+    }
+}
+
+// Animación al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.compra-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<!-- Estilos adicionales -->
+<style>
+.compra-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.compra-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+.producto-item {
+    transition: background-color 0.2s ease;
+}
+
+.producto-item:hover {
+    background-color: #f8f9fa;
+}
+
+.productos-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.productos-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.productos-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.productos-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.productos-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.empty-state i {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.card-footer {
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .productos-list {
+        max-height: none;
+    }
+}
+</style>
+{% endblock %}

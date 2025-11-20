@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Carrito - TiendaOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5">
+                <i class="fas fa-shopping-cart me-3 text-primary"></i>Mi Carrito
+            </h1>
+            <p class="text-muted">Revisa tus productos antes de finalizar la compra</p>
+        </div>
+    </div>
+
+    {% if carrito.productos %}
+    <div class="row">
+        <!-- Productos en el carrito -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box me-2"></i>Productos ({{ cantidad_items }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for item in carrito.productos %}
+                    <div class="row align-items-center mb-4 pb-4 border-bottom">
+                        <div class="col-md-2">
+                            <img src="{{ item.imagen }}" class="img-fluid rounded" alt="{{ item.nombre }}">
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1">{{ item.nombre }}</h6>
+                            <p class="text-muted small mb-0">Precio: ${{ item.precio }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="POST" action="{% url 'actualizar_cantidad_carrito' item.producto_id %}">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            onclick="this.parentElement.querySelector('input').stepDown(); this.parentElement.parentElement.submit();">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center" 
+                                           name="cantidad" value="{{ item.cantidad }}" min="1" 
+                                           onchange="this.form.submit()">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            onclick="this.parentElement.querySelector('input').stepUp(); this.parentElement.parentElement.submit();">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <h5 class="text-success mb-0">${{ item.precio|floatformat:2 }}</h5>
+                            <small class="text-muted">x{{ item.cantidad }}</small>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <a href="{% url 'remover_del_carrito' item.producto_id %}" 
+                               class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'vaciar_carrito' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash-alt me-2"></i>Vaciar Carrito
+                        </a>
+                        <a href="{% url 'ver_productos' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Seguir Comprando
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen de la compra -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg border-0 sticky-top" style="top: 100px;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Resumen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ subtotal|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>IVA (16%):</span>
+                        <span>${{ impuesto|floatformat:2 }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong class="text-success fs-4">${{ total|floatformat:2 }}</strong>
+                    </div>
+
+                    <form method="POST" action="{% url 'procesar_compra' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-credit-card me-2"></i>Método de Pago
+                            </label>
+                            <select class="form-select" name="metodo_pago" required>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                                <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                                <option value="Transferencia">Transferencia Bancaria</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-comment me-2"></i>Notas (Opcional)
+                            </label>
+                            <textarea class="form-control" name="notas" rows="3" 
+                                      placeholder="Agregar instrucciones de entrega..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-check-circle me-2"></i>Finalizar Compra
+                        </button>
+                    </form>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <small>Compra 100% segura y protegida</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Carrito vacío -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 text-center py-5">
+                <div class="card-body">
+                    <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+                    <h3 class="mb-3">Tu carrito está vacío</h3>
+                    <p class="text-muted mb-4">¡Agrega productos para comenzar a comprar!</p>
+                    <a href="{% url 'ver_productos' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-bag me-2"></i>Ver Productos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Cuenta{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 76px;">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="section-title text-start">
+                <i class="fas fa-user-circle me-2"></i>Mi Cuenta
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Información del Perfil -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-id-card me-2"></i>Perfil
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if usuario.foto_perfil %}
+                        <img src="{{ usuario.foto_perfil.url }}" 
+                             alt="{{ usuario.first_name }}" 
+                             class="rounded-circle mb-3" 
+                             style="width: 180px; height: 180px; object-fit: cover; border: 4px solid var(--primary-color); box-shadow: 0 5px 20px rgba(85, 107, 47, 0.3);">
+                    {% else %}
+                        <div class="rounded-circle bg-primary mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 180px; height: 180px; border: 4px solid var(--primary-color); box-shadow: 0 5px 20px rgba(85, 107, 47, 0.3);">
+                            <i class="fas fa-user text-white" style="font-size: 5rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h4 class="mb-2">{{ usuario.first_name }} {{ usuario.last_name }}</h4>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-envelope me-2"></i>{{ usuario.email }}
+                    </p>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-birthday-cake me-2"></i>{{ usuario.edad }} años
+                    </p>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'ver_productos' %}" class="btn btn-primary">
+                            <i class="fas fa-shopping-bag me-2"></i>Ver Productos
+                        </a>
+                        <a href="{% url 'todos_comentarios' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-comments me-2"></i>Ver Comentarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="card shadow mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span><i class="fas fa-comments text-primary me-2"></i>Comentarios</span>
+                        <strong>{{ mis_comentarios|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span><i class="fas fa-star text-warning me-2"></i>Calificación Promedio</span>
+                        <strong>4.5/5</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-calendar text-success me-2"></i>Miembro desde</span>
+                        <strong>{{ usuario.date_joined|date:"M Y" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulario de Edición -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Editar Perfil
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user me-2 text-primary"></i>Nombre
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="nombre" 
+                                       name="nombre" 
+                                       value="{{ usuario.first_name }}" 
+                                       required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <label for="apellidos" class="form-label">
+                                    <i class="fas fa-user-tag me-2 text-primary"></i>Apellidos
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="apellidos" 
+                                       name="apellidos" 
+                                       value="{{ usuario.last_name }}" 
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="edad" class="form-label">
+                                <i class="fas fa-calendar me-2 text-primary"></i>Edad
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg" 
+                                   id="edad" 
+                                   name="edad" 
+                                   value="{{ usuario.edad }}" 
+                                   required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2 text-primary"></i>Correo Electrónico
+                            </label>
+                            <input type="email" 
+                                   class="form-control form-control-lg" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ usuario.email }}" 
+                                   required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="foto_perfil" class="form-label">
+                                <i class="fas fa-camera me-2 text-primary"></i>Foto de Perfil
+                            </label>
+                            <input type="file" 
+                                   class="form-control form-control-lg" 
+                                   id="foto_perfil" 
+                                   name="foto_perfil" 
+                                   accept="image/*">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Formatos permitidos: JPG, PNG, GIF (Máx. 5MB)
+                            </small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Privacidad:</strong> Tu información está segura y protegida.
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mis Comentarios -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-comment-dots me-2"></i>Mis Comentarios
+                    </h4>
+                    {% if mis_comentarios %}
+                        <span class="badge bg-primary rounded-pill">{{ mis_comentarios|length }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if mis_comentarios %}
+                        <div class="row">
+                            {% for comentario in mis_comentarios %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card shadow-sm h-100" style="background-color: #3d3d3d; border: 1px solid var(--border-color);">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <span class="text-warning fs-4">{{ comentario.get_estrellas }}</span>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ comentario.fecha|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        <p class="mb-3">{{ comentario.comentario }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            {% if comentario.estado == 'activo' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Activo
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-times-circle me-1"></i>Inactivo
+                                                </span>
+                                            {% endif %}
+                                            <span class="badge bg-primary">{{ comentario.calificacion }}/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-comment-slash fa-4x text-muted mb-3"></i>
+                            <p class="text-muted mb-3">No has dejado comentarios aún.</p>
+                            <a href="{% url 'index' %}" class="btn btn-primary">
+                                <i class="fas fa-comment-medical me-2"></i>Dejar tu Primer Comentario
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

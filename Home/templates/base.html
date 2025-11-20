@@ -1,0 +1,424 @@
+{% load static %}  <!-- ← DEBE ESTAR EN LA PRIMERA LÍNEA -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TiendaOnline{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    
+    <!-- Preconnect para Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/dashboard_styles.css' %}?v=2">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-shopping-cart me-2"></i>
+                <strong>TiendaOnline</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <!-- Inicio -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" 
+                           href="{% url 'index' %}">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </a>
+                    </li>
+                    
+                    {% if user.is_authenticated %}
+                        <!-- Productos -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'ver_productos' %}active{% endif %}" 
+                               href="{% url 'ver_productos' %}">
+                                <i class="fas fa-box me-1"></i>Productos
+                            </a>
+                        </li>
+
+                        <!-- Carrito con Badge -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative {% if request.resolver_match.url_name == 'ver_carrito' %}active{% endif %}" 
+                               href="{% url 'ver_carrito' %}">
+                                <i class="fas fa-shopping-cart me-1"></i>Carrito
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                      style="font-size: 0.65rem;">
+                                    0
+                                    <span class="visually-hidden">items en carrito</span>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- Mis Compras -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'mis_compras' %}active{% endif %}" 
+                               href="{% url 'mis_compras' %}">
+                                <i class="fas fa-shopping-bag me-1"></i>Mis Compras
+                            </a>
+                        </li>
+                        
+                        <!-- Comentarios -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'todos_comentarios' %}active{% endif %}" 
+                               href="{% url 'todos_comentarios' %}">
+                                <i class="fas fa-comments me-1"></i>Comentarios
+                            </a>
+                        </li>
+
+                        <!-- ========== MENÚ ADMIN ========== -->
+                        {% if user.is_staff %}
+                        <!-- Menú de Administración -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning" href="#" id="navbarAdmin" 
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-shield-alt me-1"></i>Admin
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarAdmin">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-cog me-2"></i>Panel de Administración
+                                    </h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'agregar_producto' %}">
+                                        <i class="fas fa-plus-circle me-2 text-success"></i>Agregar Producto
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'reporte_ventas' %}">
+                                        <i class="fas fa-chart-bar me-2 text-primary"></i>Reportes de Ventas
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'ver_auditoria' %}">
+                                        <i class="fas fa-clipboard-list me-2 text-warning"></i>Auditoría
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'reporte_ventas' %}?estado=completada">
+                                        <i class="fas fa-check-circle me-2 text-success"></i>Ventas Completadas
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'reporte_ventas' %}?estado=pendiente">
+                                        <i class="fas fa-clock me-2 text-warning"></i>Ventas Pendientes
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'descargar_reporte_pdf' %}">
+                                        <i class="fas fa-file-pdf me-2"></i>Descargar Reporte PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/admin/" target="_blank">
+                                        <i class="fas fa-tools me-2 text-secondary"></i>Django Admin
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+
+                        <!-- Menú de Usuario -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarUser" 
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ user.first_name|default:user.username }}
+                                {% if user.is_staff %}
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem;">ADMIN</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUser">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-user me-2"></i>{{ user.email }}
+                                    </h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'mi_cuenta' %}">
+                                        <i class="fas fa-user-cog me-2 text-primary"></i>Mi Cuenta
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'mis_compras' %}">
+                                        <i class="fas fa-shopping-bag me-2 text-success"></i>Mis Compras
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'ver_carrito' %}">
+                                        <i class="fas fa-shopping-cart me-2 text-info"></i>Mi Carrito
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- Usuario no autenticado -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light ms-lg-2 px-3" href="{% url 'register' %}">
+                                <i class="fas fa-user-plus me-1"></i>Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mensajes Flash -->
+    {% if messages %}
+        <div class="container" style="margin-top: 100px;">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle me-2"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% elif message.tags == 'info' %}
+                        <i class="fas fa-info-circle me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-5 bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <!-- Columna 1: Información de la tienda -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h4 class="mb-3">
+                        <i class="fas fa-shopping-cart me-2 text-primary"></i>TiendaOnline
+                    </h4>
+                    <p class="text-muted">
+                        Tu tienda de confianza para encontrar los mejores productos al mejor precio. 
+                        Calidad garantizada y envíos a todo el país.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#" class="text-white me-3 social-icon" title="Facebook">
+                            <i class="fab fa-facebook fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-white me-3 social-icon" title="Twitter">
+                            <i class="fab fa-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-white me-3 social-icon" title="Instagram">
+                            <i class="fab fa-instagram fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-white social-icon" title="YouTube">
+                            <i class="fab fa-youtube fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Columna 2: Enlaces Rápidos -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="mb-3">Enlaces Rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{% url 'index' %}" class="footer-link">
+                                <i class="fas fa-chevron-right me-2"></i>Inicio
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'ver_productos' %}" class="footer-link">
+                                <i class="fas fa-chevron-right me-2"></i>Productos
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'todos_comentarios' %}" class="footer-link">
+                                <i class="fas fa-chevron-right me-2"></i>Comentarios
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li class="mb-2">
+                            <a href="{% url 'mis_compras' %}" class="footer-link">
+                                <i class="fas fa-chevron-right me-2"></i>Mis Compras
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'mi_cuenta' %}" class="footer-link">
+                                <i class="fas fa-chevron-right me-2"></i>Mi Cuenta
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <!-- Columna 3: Contacto -->
+                <div class="col-lg-4 col-md-12 mb-4">
+                    <h5 class="mb-3">Contacto</h5>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                            Mosquera, Cundinamarca, Colombia
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-phone me-2 text-primary"></i>
+                            <a href="tel:+573001234567" class="footer-link">+57 300 123 4567</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-envelope me-2 text-primary"></i>
+                            <a href="mailto:info@tiendaonline.com" class="footer-link">info@tiendaonline.com</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock me-2 text-primary"></i>
+                            Lun - Vie: 9:00 AM - 6:00 PM
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4 border-secondary">
+            
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <p class="mb-0 text-muted">
+                        &copy; 2025 TiendaOnline. Todos los derechos reservados.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="footer-link me-3">Términos y Condiciones</a>
+                    <a href="#" class="footer-link me-3">Política de Privacidad</a>
+                    <a href="#" class="footer-link">Soporte</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Scripts globales -->
+    <script>
+        // Auto-ocultar alertas después de 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+
+        // Highlight nav item activo
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+    <style>
+        /* Estilos adicionales para el footer y navbar */
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #2563eb;
+            padding-left: 5px;
+        }
+
+        .social-icon {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            color: #2563eb !important;
+        }
+
+        .nav-link.active {
+            color: #60a5fa !important;
+            font-weight: 600;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+            color: #2563eb;
+            padding-left: 2rem;
+        }
+
+        .dropdown-header {
+            font-size: 0.875rem;
+            color: #64748b !important;
+        }
+
+        @media (max-width: 991px) {
+            .navbar-nav .nav-link {
+                padding: 0.75rem 1rem;
+            }
+            
+            .dropdown-menu {
+                border: 1px solid #e2e8f0;
+            }
+        }
+    </style>
+    
+</body>
+</html>
