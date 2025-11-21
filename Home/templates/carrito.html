@@ -7,10 +7,24 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="display-5">
-                <i class="fas fa-shopping-cart me-3 text-primary"></i>Mi Carrito
-            </h1>
-            <p class="text-muted">Revisa tus productos antes de finalizar la compra</p>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="display-5">
+                        <i class="fas fa-shopping-cart me-3 text-primary"></i>Mi Carrito
+                    </h1>
+                    <p class="text-muted mb-0">Revisa tus productos antes de finalizar la compra</p>
+                    {% if carrito.productos %}
+                    <small class="text-muted">
+                        <i class="fas fa-box me-1"></i>{{ cantidad_items }} producto{{ cantidad_items|pluralize }} en tu carrito
+                    </small>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'ver_productos' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Seguir Comprando
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -19,60 +33,88 @@
         <!-- Productos en el carrito -->
         <div class="col-lg-8 mb-4">
             <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-box me-2"></i>Productos ({{ cantidad_items }})
-                    </h5>
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-box me-2 text-primary"></i>Productos ({{ cantidad_items }})
+                        </h5>
+                        <a href="{% url 'vaciar_carrito' %}" 
+                           class="btn btn-outline-danger btn-sm"
+                           onclick="return confirm('¿Estás seguro de vaciar el carrito?')">
+                            <i class="fas fa-trash-alt me-1"></i>Vaciar Todo
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     {% for item in carrito.productos %}
-                    <div class="row align-items-center mb-4 pb-4 border-bottom">
-                        <div class="col-md-2">
-                            <img src="{{ item.imagen }}" class="img-fluid rounded" alt="{{ item.nombre }}">
+                    <div class="row align-items-center mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %} producto-item">
+                        <!-- Imagen del producto con Base64 -->
+                        <div class="col-md-2 mb-3 mb-md-0">
+                            <div class="imagen-carrito">
+                                <img src="{{ item.imagen_url }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="{{ item.nombre }}"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22150%22 height=%22150%22/%3E%3Ctext fill=%22%239ca3af%22 font-family=%22Arial%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ESin Imagen%3C/text%3E%3C/svg%3E'">
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="mb-1">{{ item.nombre }}</h6>
-                            <p class="text-muted small mb-0">Precio: ${{ item.precio }}</p>
+                        
+                        <!-- Info del producto -->
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <h6 class="mb-2 fw-bold">{{ item.nombre }}</h6>
+                            <p class="text-muted small mb-1">
+                                <i class="fas fa-dollar-sign me-1"></i>Precio unitario: 
+                                <span class="fw-bold">${{ item.precio|floatformat:2 }}</span>
+                            </p>
+                            <p class="text-success small mb-0">
+                                <i class="fas fa-check-circle me-1"></i>En stock
+                            </p>
                         </div>
-                        <div class="col-md-3">
-                            <form method="POST" action="{% url 'actualizar_cantidad_carrito' item.producto_id %}">
-                                {% csrf_token %}
-                                <div class="input-group">
-                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                            onclick="this.parentElement.querySelector('input').stepDown(); this.parentElement.parentElement.submit();">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <input type="number" class="form-control text-center" 
-                                           name="cantidad" value="{{ item.cantidad }}" min="1" 
-                                           onchange="this.form.submit()">
-                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                            onclick="this.parentElement.querySelector('input').stepUp(); this.parentElement.parentElement.submit();">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </form>
+                        
+                        <!-- Control de cantidad -->
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <label class="form-label small fw-bold mb-2">Cantidad:</label>
+                            <div class="input-group shadow-sm">
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        type="button" 
+                                        onclick="updateQuantity('{{ item.producto_id }}', {{ item.cantidad }} - 1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" 
+                                       class="form-control text-center fw-bold" 
+                                       id="cantidad-{{ item.producto_id }}"
+                                       value="{{ item.cantidad }}" 
+                                       min="1" 
+                                       readonly>
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        type="button" 
+                                        onclick="updateQuantity('{{ item.producto_id }}', {{ item.cantidad }} + 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-2 text-end">
-                            <h5 class="text-success mb-0">${{ item.precio|floatformat:2 }}</h5>
-                            <small class="text-muted">x{{ item.cantidad }}</small>
+                        
+                        <!-- Subtotal del item -->
+                        <div class="col-md-2 mb-3 mb-md-0">
+                            <div class="text-center text-md-end">
+                                <p class="text-muted small mb-1">Subtotal:</p>
+                                <h5 class="text-success mb-0 fw-bold">
+                                    ${{ item.precio|floatformat:2 }}
+                                </h5>
+                                <small class="text-muted">x {{ item.cantidad }}</small>
+                            </div>
                         </div>
-                        <div class="col-md-1 text-end">
+                        
+                        <!-- Botón eliminar -->
+                        <div class="col-md-1 text-center text-md-end">
                             <a href="{% url 'remover_del_carrito' item.producto_id %}" 
-                               class="btn btn-outline-danger btn-sm">
+                               class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('¿Eliminar {{ item.nombre }} del carrito?')"
+                               title="Eliminar producto">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>
                     </div>
                     {% endfor %}
-                    
-                    <div class="text-center mt-4">
-                        <a href="{% url 'vaciar_carrito' %}" class="btn btn-outline-danger">
-                            <i class="fas fa-trash-alt me-2"></i>Vaciar Carrito
-                        </a>
-                        <a href="{% url 'ver_productos' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Seguir Comprando
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -80,57 +122,89 @@
         <!-- Resumen de la compra -->
         <div class="col-lg-4">
             <div class="card shadow-lg border-0 sticky-top" style="top: 100px;">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white py-3">
                     <h5 class="mb-0">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Resumen
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Resumen de Compra
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span>${{ subtotal|floatformat:2 }}</span>
+                <div class="card-body p-4">
+                    <!-- Desglose de precios -->
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Subtotal:</span>
+                        <span class="fw-bold">${{ subtotal|floatformat:2 }}</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>IVA (16%):</span>
-                        <span>${{ impuesto|floatformat:2 }}</span>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span class="text-muted">
+                            IVA (16%):
+                            <i class="fas fa-info-circle text-muted" 
+                               data-bs-toggle="tooltip" 
+                               title="Impuesto al Valor Agregado"></i>
+                        </span>
+                        <span class="fw-bold">${{ impuesto|floatformat:2 }}</span>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-3">
-                        <strong>Total:</strong>
-                        <strong class="text-success fs-4">${{ total|floatformat:2 }}</strong>
+                    
+                    <!-- Total -->
+                    <div class="d-flex justify-content-between mb-4 p-3 bg-light rounded">
+                        <strong class="fs-5">Total a Pagar:</strong>
+                        <strong class="text-success fs-3">${{ total|floatformat:2 }}</strong>
                     </div>
 
-                    <form method="POST" action="{% url 'procesar_compra' %}">
+                    <!-- Formulario de compra -->
+                    <form method="POST" action="{% url 'procesar_compra' %}" id="formCompra">
                         {% csrf_token %}
                         
+                        <!-- Método de pago -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-credit-card me-2"></i>Método de Pago
+                                <i class="fas fa-credit-card me-2 text-primary"></i>Método de Pago
                             </label>
-                            <select class="form-select" name="metodo_pago" required>
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
-                                <option value="Tarjeta de Débito">Tarjeta de Débito</option>
-                                <option value="Transferencia">Transferencia Bancaria</option>
+                            <select class="form-select form-select-lg shadow-sm" 
+                                    name="metodo_pago" 
+                                    required>
+                                <option value="">Selecciona un método...</option>
+                                <option value="Efectivo">
+                                    <i class="fas fa-money-bill-wave"></i> Efectivo
+                                </option>
+                                <option value="Tarjeta de Crédito">
+                                    <i class="fas fa-credit-card"></i> Tarjeta de Crédito
+                                </option>
+                                <option value="Tarjeta de Débito">
+                                    <i class="fas fa-credit-card"></i> Tarjeta de Débito
+                                </option>
+                                <option value="Transferencia">
+                                    <i class="fas fa-exchange-alt"></i> Transferencia Bancaria
+                                </option>
+                                <option value="PayPal">
+                                    <i class="fab fa-paypal"></i> PayPal
+                                </option>
                             </select>
                         </div>
 
-                        <div class="mb-3">
+                        <!-- Notas opcionales -->
+                        <div class="mb-4">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-comment me-2"></i>Notas (Opcional)
+                                <i class="fas fa-comment me-2 text-primary"></i>Notas de Entrega (Opcional)
                             </label>
-                            <textarea class="form-control" name="notas" rows="3" 
-                                      placeholder="Agregar instrucciones de entrega..."></textarea>
+                            <textarea class="form-control shadow-sm" 
+                                      name="notas" 
+                                      rows="3" 
+                                      placeholder="Ej: Entregar en recepción, tocar el timbre dos veces..."></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <!-- Botón de compra -->
+                        <button type="submit" 
+                                class="btn btn-primary btn-lg w-100 shadow-sm mb-3">
                             <i class="fas fa-check-circle me-2"></i>Finalizar Compra
                         </button>
                     </form>
 
-                    <div class="alert alert-info mt-3 mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>
-                        <small>Compra 100% segura y protegida</small>
+                    <!-- Información de seguridad -->
+                    <div class="alert alert-info mb-0 d-flex align-items-center">
+                        <i class="fas fa-shield-alt fa-2x me-3 text-primary"></i>
+                        <div>
+                            <small class="fw-bold d-block mb-1">Compra 100% Segura</small>
+                            <small class="text-muted">Tus datos están protegidos</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -142,11 +216,15 @@
         <div class="col-12">
             <div class="card shadow-lg border-0 text-center py-5">
                 <div class="card-body">
-                    <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
-                    <h3 class="mb-3">Tu carrito está vacío</h3>
-                    <p class="text-muted mb-4">¡Agrega productos para comenzar a comprar!</p>
-                    <a href="{% url 'ver_productos' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-shopping-bag me-2"></i>Ver Productos
+                    <div class="mb-4">
+                        <i class="fas fa-shopping-cart fa-5x text-muted opacity-50"></i>
+                    </div>
+                    <h2 class="mb-3">Tu carrito está vacío</h2>
+                    <p class="text-muted mb-4 fs-5">
+                        ¡Agrega productos para comenzar tu experiencia de compra!
+                    </p>
+                    <a href="{% url 'ver_productos' %}" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="fas fa-shopping-bag me-2"></i>Explorar Productos
                     </a>
                 </div>
             </div>
@@ -154,4 +232,147 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+    /* Imagen del carrito */
+    .imagen-carrito {
+        width: 100%;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+    .imagen-carrito img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .producto-item:hover .imagen-carrito img {
+        transform: scale(1.05);
+    }
+
+    /* Input de cantidad */
+    .input-group .btn {
+        border-color: #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .input-group .btn:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        color: white;
+    }
+
+    .input-group .form-control {
+        border-color: #e5e7eb;
+        max-width: 70px;
+    }
+
+    /* Card sticky */
+    @media (max-width: 991px) {
+        .sticky-top {
+            position: relative !important;
+            top: 0 !important;
+        }
+    }
+
+    /* Botón de finalizar compra */
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4) !important;
+    }
+
+    /* Animaciones */
+    .producto-item {
+        transition: all 0.3s ease;
+    }
+
+    .producto-item:hover {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem !important;
+    }
+
+    /* Select mejorado */
+    .form-select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+
+    /* Alert de seguridad */
+    .alert-info {
+        background-color: #e0f2fe;
+        border-color: #bae6fd;
+        color: #075985;
+    }
+</style>
+
+<script>
+    // Función para actualizar cantidad
+    function updateQuantity(productoId, nuevaCantidad) {
+        if (nuevaCantidad < 1) {
+            if (confirm('¿Deseas eliminar este producto del carrito?')) {
+                window.location.href = `/carrito/remover/${productoId}/`;
+            }
+            return;
+        }
+
+        // Crear formulario dinámico
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/carrito/actualizar/${productoId}/`;
+
+        // Token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // Cantidad
+        const cantidadInput = document.createElement('input');
+        cantidadInput.type = 'hidden';
+        cantidadInput.name = 'cantidad';
+        cantidadInput.value = nuevaCantidad;
+        form.appendChild(cantidadInput);
+
+        // Enviar
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Inicializar tooltips de Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Validación del formulario
+        const form = document.getElementById('formCompra');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const metodoPago = form.querySelector('[name="metodo_pago"]').value;
+                if (!metodoPago) {
+                    e.preventDefault();
+                    alert('Por favor selecciona un método de pago');
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

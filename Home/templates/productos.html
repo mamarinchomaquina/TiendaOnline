@@ -7,19 +7,25 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
                     <h1 class="display-5">
                         <i class="fas fa-box me-3 text-primary"></i>Catálogo de Productos
                     </h1>
-                    <p class="text-muted">Encuentra los mejores productos al mejor precio</p>
+                    <p class="text-muted mb-0">Encuentra los mejores productos al mejor precio</p>
+                    <small class="text-muted">
+                        <i class="fas fa-cube me-1"></i>{{ productos|length }} producto{{ productos|length|pluralize }} disponible{{ productos|length|pluralize }}
+                    </small>
                 </div>
                 <div>
-                    <a href="{% url 'ver_carrito' %}" class="btn btn-primary btn-lg position-relative">
+                    <a href="{% url 'ver_carrito' %}" class="btn btn-primary btn-lg position-relative shadow-sm">
                         <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ carrito_items|default:0 }}
+                        {% if carrito_items > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger animate-pulse">
+                            {{ carrito_items }}
+                            <span class="visually-hidden">items en carrito</span>
                         </span>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -28,114 +34,268 @@
 
     <!-- Productos -->
     {% if productos %}
-    <div class="row">
+    <div class="row g-4">
         {% for producto in productos %}
-        <div class="col-lg-4 col-md-6 mb-4">
+        <div class="col-lg-4 col-md-6">
             <div class="card h-100 shadow-lg border-0 producto-card">
+                <!-- Imagen del producto con Base64 -->
                 <div class="card-img-container">
-                    <img src="{{ producto.imagen }}" class="card-img-top" alt="{{ producto.nombre }}">
-                    {% if producto.stock <= 5 %}
-                    <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3">
-                        <i class="fas fa-exclamation-triangle me-1"></i>Últimas {{ producto.stock }} unidades
+                    <img src="{{ producto.imagen_url }}" 
+                         class="card-img-top" 
+                         alt="{{ producto.nombre }}"
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%239ca3af%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ESin Imagen%3C/text%3E%3C/svg%3E'">
+                    
+                    <!-- Badge de stock bajo -->
+                    {% if producto.stock > 0 and producto.stock <= 5 %}
+                    <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 shadow-sm">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {% if producto.stock == 1 %}
+                            Última unidad
+                        {% else %}
+                            Últimas {{ producto.stock }} unidades
+                        {% endif %}
+                    </span>
+                    {% elif producto.stock == 0 %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 m-3 shadow-sm">
+                        <i class="fas fa-times-circle me-1"></i>Sin Stock
                     </span>
                     {% endif %}
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <span class="badge bg-primary mb-2 align-self-start">
+                    
+                    <!-- Badge de categoría -->
+                    <span class="badge bg-primary position-absolute top-0 start-0 m-3 shadow-sm">
                         {{ producto.categoria }}
                     </span>
-                    <h5 class="card-title">{{ producto.nombre }}</h5>
-                    <p class="card-text text-muted flex-grow-1">
-                        {{ producto.descripcion|truncatewords:15 }}
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <!-- Título del producto -->
+                    <h5 class="card-title mb-3 fw-bold">{{ producto.nombre }}</h5>
+                    
+                    <!-- Descripción -->
+                    <p class="card-text text-muted flex-grow-1 small">
+                        {% if producto.descripcion %}
+                            {{ producto.descripcion|truncatewords:15 }}
+                        {% else %}
+                            Sin descripción disponible
+                        {% endif %}
                     </p>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h3 class="text-success mb-0">${{ producto.precio }}</h3>
-                            <small class="text-muted">
-                                <i class="fas fa-box-open me-1"></i>Stock: {{ producto.stock }}
-                            </small>
+                    
+                    <!-- Precio y stock -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="text-success mb-1 fw-bold">${{ producto.precio }}</h3>
+                                <small class="text-muted">
+                                    <i class="fas fa-box-open me-1"></i>
+                                    Stock: 
+                                    <span class="{% if producto.stock <= 5 %}text-warning{% else %}text-success{% endif %} fw-bold">
+                                        {{ producto.stock }}
+                                    </span>
+                                </small>
+                            </div>
+                            {% if producto.stock > 0 %}
+                            <div class="text-end">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Disponible
+                                </span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     
-                    
                     <!-- Formulario para agregar al carrito -->
-<form method="POST" action="{% url 'agregar_al_carrito' producto.id %}">
-    {% csrf_token %}
-    <div class="input-group mb-3">
-        <button class="btn btn-outline-secondary" type="button" onclick="this.parentElement.querySelector('input[type=number]').stepDown()">
-            <i class="fas fa-minus"></i>
-        </button>
-        <input type="number" 
-               class="form-control text-center" 
-               name="cantidad" 
-               value="1" 
-               min="1" 
-               max="{{ producto.stock }}">
-        <button class="btn btn-outline-secondary" type="button" onclick="this.parentElement.querySelector('input[type=number]').stepUp()">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-    
-    {% if producto.stock > 0 %}
-    <button type="submit" class="btn btn-primary w-100">
-        <i class="fas fa-cart-plus me-2"></i>Agregar al Carrito
-    </button>
-    {% else %}
-    <button type="button" class="btn btn-secondary w-100" disabled>
-        <i class="fas fa-times me-2"></i>Sin Stock
-    </button>
-    {% endif %}
-</form>
+                    <form method="POST" action="{% url 'agregar_al_carrito' producto.id %}" class="mt-auto">
+                        {% csrf_token %}
+                        
+                        {% if producto.stock > 0 %}
+                        <div class="input-group mb-3 shadow-sm">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    onclick="decrementValue(this)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" 
+                                   class="form-control text-center fw-bold" 
+                                   name="cantidad" 
+                                   value="1" 
+                                   min="1" 
+                                   max="{{ producto.stock }}"
+                                   id="cantidad-{{ producto.id }}"
+                                   readonly>
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    onclick="incrementValue(this, {{ producto.stock }})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 btn-lg shadow-sm">
+                            <i class="fas fa-cart-plus me-2"></i>Agregar al Carrito
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary w-100 btn-lg" disabled>
+                            <i class="fas fa-times me-2"></i>Sin Stock
+                        </button>
+                        {% endif %}
+                    </form>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="alert alert-info text-center">
-        <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
-        <h4>No hay productos disponibles</h4>
-        <p>Vuelve pronto para ver nuestras ofertas</p>
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center py-5 shadow-sm">
+                <i class="fas fa-info-circle fa-4x mb-4 d-block text-primary"></i>
+                <h3>No hay productos disponibles</h3>
+                <p class="text-muted mb-4">Vuelve pronto para ver nuestras ofertas</p>
+                {% if user.is_staff %}
+                <a href="{% url 'agregar_producto' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Agregar Primer Producto
+                </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>
 
 <style>
-.producto-card {
-    transition: all 0.3s ease;
-}
+    /* Card de producto */
+    .producto-card {
+        transition: all 0.3s ease;
+        border-radius: 16px;
+        overflow: hidden;
+    }
 
-.producto-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(37, 99, 235, 0.3) !important;
-}
+    .producto-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3) !important;
+    }
 
-.card-img-container {
-    position: relative;
-    height: 250px;
-    overflow: hidden;
-}
+    /* Contenedor de imagen */
+    .card-img-container {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
 
-.card-img-top {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
 
-.producto-card:hover .card-img-top {
-    transform: scale(1.1);
-}
+    .producto-card:hover .card-img-top {
+        transform: scale(1.1);
+    }
 
-.input-group .btn {
-    border-color: rgba(37, 99, 235, 0.3);
-}
+    /* Input de cantidad */
+    .input-group .btn {
+        border-color: #e5e7eb;
+        transition: all 0.3s ease;
+    }
 
-.input-group .form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
-}
+    .input-group .btn:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        color: white;
+    }
+
+    .input-group .form-control {
+        border-color: #e5e7eb;
+        font-size: 1.1rem;
+    }
+
+    .input-group .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+
+    /* Badges */
+    .badge {
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* Animación del badge del carrito */
+    @keyframes pulse {
+        0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+    }
+
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Botón de agregar al carrito */
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-img-container {
+            height: 220px;
+        }
+        
+        .display-5 {
+            font-size: 1.8rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-img-container {
+            height: 200px;
+        }
+    }
 </style>
-{% endblock %}
-```
 
+<script>
+    // Funciones para incrementar/decrementar cantidad
+    function incrementValue(button, max) {
+        const input = button.parentElement.querySelector('input[type=number]');
+        const currentValue = parseInt(input.value);
+        if (currentValue < max) {
+            input.value = currentValue + 1;
+        }
+    }
+
+    function decrementValue(button) {
+        const input = button.parentElement.querySelector('input[type=number]');
+        const currentValue = parseInt(input.value);
+        if (currentValue > 1) {
+            input.value = currentValue - 1;
+        }
+    }
+
+    // Prevenir envío del formulario con Enter en el input de cantidad
+    document.addEventListener('DOMContentLoaded', function() {
+        const cantidadInputs = document.querySelectorAll('input[name="cantidad"]');
+        cantidadInputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

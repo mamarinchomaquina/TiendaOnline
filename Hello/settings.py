@@ -2,6 +2,8 @@
 
 from pathlib import Path
 import os
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,25 +21,10 @@ INSTALLED_APPS = [
     'Home',
 ]
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'Home',
-]
-
 # ==========================================
 # 🔥 MODELO DE USUARIO PERSONALIZADO
 # ==========================================
 AUTH_USER_MODEL = 'Home.Usuario'
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    # ... resto del código
-]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,10 +67,43 @@ DATABASES = {
 }
 
 # ==========================================
-# 🔥 CONFIGURACIÓN MONGODB CON PYMONGO
+# 🔥 CONFIGURACIÓN MONGODB ATLAS CON PYMONGO
 # ==========================================
 MONGODB_URI = 'mongodb+srv://mamarin:mamarin30@cluster0.hhtibs9.mongodb.net/'
 MONGODB_NAME = 'Tienda_Online'
+
+# Cliente de MongoDB con manejo de errores
+try:
+    mongo_client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=10000,
+    )
+    # Verificar conexión
+    mongo_client.admin.command('ping')
+    mongo_db = mongo_client[MONGODB_NAME]
+    
+    # Mostrar colecciones disponibles
+    collections = mongo_db.list_collection_names()
+    print(f"✅ Conectado a MongoDB Atlas: {MONGODB_NAME}")
+    print(f"📦 Colecciones: {collections if collections else 'Base de datos vacía'}")
+    
+except ServerSelectionTimeoutError:
+    print("❌ ERROR: No se pudo conectar a MongoDB Atlas (Timeout)")
+    print("🔍 Verifica tu connection string y las reglas de IP en MongoDB Atlas")
+    mongo_client = None
+    mongo_db = None
+    
+except ConnectionFailure as e:
+    print(f"❌ ERROR de conexión a MongoDB: {e}")
+    mongo_client = None
+    mongo_db = None
+    
+except Exception as e:
+    print(f"❌ ERROR inesperado con MongoDB: {e}")
+    mongo_client = None
+    mongo_db = None
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

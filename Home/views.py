@@ -1,3 +1,5 @@
+# Home/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -9,14 +11,25 @@ from .mongodb import (
     productos_collection, 
     ventas_collection, 
     carrito_collection,
-    auditoria_collection,  # ✅ NUEVO
-    registrar_auditoria,   # ✅ NUEVO
+    auditoria_collection,
+    usuarios_collection,
+    registrar_auditoria,
     str_to_objectid,
     objectid_to_str
 )
 from bson import ObjectId
 from datetime import datetime, timedelta
 from .utils import generar_factura_pdf, generar_reporte_ventas_pdf
+
+# ==========================================
+# 🎨 IMPORTAR UTILIDADES DE IMÁGENES
+# ==========================================
+from .image_utils import (
+    image_to_base64,
+    base64_to_image_data_uri,
+    get_default_avatar_base64,
+    get_default_product_image_base64
+)
 
 
 # ==========================================
@@ -158,7 +171,7 @@ def index(request):
             'crecimiento_ventas': crecimiento_ventas,
             'nombre_mes_actual': nombre_mes_actual,
             'nombre_mes_anterior': nombre_mes_anterior,
-            'es_admin': True  # ✅ INDICADOR PARA EL TEMPLATE
+            'es_admin': True
         }
         
         return render(request, 'index.html', context)
@@ -168,7 +181,7 @@ def index(request):
         context = {
             'usuario': request.user.first_name,
             'usuario_info': request.user,
-            'es_admin': False  # ✅ INDICADOR PARA EL TEMPLATE
+            'es_admin': False
         }
         return render(request, 'index.html', context)
 
@@ -189,7 +202,6 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 
-                # ✅ REGISTRAR AUDITORÍA DE LOGIN
                 registrar_auditoria(
                     accion='LOGIN',
                     usuario_email=user.email,
@@ -220,7 +232,6 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             
-            # ✅ REGISTRAR AUDITORÍA DE REGISTRO
             registrar_auditoria(
                 accion='REGISTRO',
                 usuario_email=user.email,
@@ -245,7 +256,6 @@ def register_view(request):
 
 def logout_view(request):
     """Vista de logout"""
-    # ✅ REGISTRAR AUDITORÍA DE LOGOUT
     registrar_auditoria(
         accion='LOGOUT',
         usuario_email=request.user.email if request.user.is_authenticated else 'Anónimo',
@@ -261,34 +271,53 @@ def logout_view(request):
 
 
 # ==========================================
-# 📦 PRODUCTOS
+# 📦 PRODUCTOS CON IMÁGENES BASE64
 # ==========================================
 
 @login_required
 def agregar_producto(request):
-    """Vista para agregar productos (solo admin)"""
+    """Vista para agregar productos con imagen (solo admin)"""
     if not request.user.is_staff:
         messages.error(request, '❌ No tienes permiso para acceder a esta sección')
         return redirect('index')
     
     if request.method == 'POST':
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            # Insertar en MongoDB
+        try:
+            # Manejar imagen
+            imagen_base64 = None
+            imagen_content_type = 'image/jpeg'
+            
+            if 'imagen' in request.FILES:
+                imagen = request.FILES['imagen']
+                # Convertir a base64 (máx 800x800px, calidad 85%)
+                resultado = image_to_base64(imagen, max_size=(800, 800), quality=85)
+                
+                if resultado:
+                    imagen_base64 = resultado['data']
+                    imagen_content_type = resultado['content_type']
+                    print(f"✅ Imagen convertida a base64 ({len(imagen_base64)} caracteres)")
+                else:
+                    messages.warning(request, 'No se pudo procesar la imagen')
+            
+            # Crear documento del producto
             producto_data = {
-                'nombre': form.cleaned_data['nombre'],
-                'descripcion': form.cleaned_data['descripcion'],
-                'precio': float(form.cleaned_data['precio']),
-                'imagen': form.cleaned_data['imagen'],
+                'nombre': request.POST.get('nombre'),
+                'descripcion': request.POST.get('descripcion'),
+                'precio': float(request.POST.get('precio')),
+                'stock': int(request.POST.get('stock', 10)),
+                'categoria': request.POST.get('categoria', 'General'),
+                'imagen': {
+                    'data': imagen_base64,
+                    'content_type': imagen_content_type
+                },
                 'activo': True,
-                'stock': 10,
-                'categoria': 'General',
                 'fecha_creacion': datetime.now(),
-                'fecha_actualizacion': datetime.now()
+                'fecha_actualizacion': datetime.now(),
+                'creado_por': request.user.email
             }
+            
             resultado = productos_collection.insert_one(producto_data)
             
-            # ✅ REGISTRAR AUDITORÍA
             registrar_auditoria(
                 accion='CREAR_PRODUCTO',
                 usuario_email=request.user.email,
@@ -302,12 +331,13 @@ def agregar_producto(request):
             )
             
             messages.success(request, '✅ Producto agregado correctamente')
-            return redirect('agregar_producto')
-    else:
-        form = ProductoForm()
+            return redirect('ver_productos')
+            
+        except Exception as e:
+            print(f"❌ Error al agregar producto: {e}")
+            messages.error(request, f'Error al agregar producto: {str(e)}')
     
     context = {
-        'form': form,
         'usuario': request.user.first_name
     }
     
@@ -316,12 +346,34 @@ def agregar_producto(request):
 
 @login_required
 def ver_productos(request):
-    """Vista del catálogo de productos"""
+    """Vista del catálogo de productos - SOPORTA AMBOS FORMATOS DE IMAGEN"""
     productos = list(productos_collection.find({'activo': True}))
     
-    # Convertir ObjectId a string para usar en templates
+    # Convertir ObjectId y preparar imágenes
     for producto in productos:
         producto['id'] = str(producto['_id'])
+        
+        # ✅ MANEJAR AMBOS FORMATOS DE IMAGEN
+        if producto.get('imagen'):
+            # Caso 1: imagen es un diccionario con Base64 (formato nuevo)
+            if isinstance(producto['imagen'], dict):
+                if producto['imagen'].get('data'):
+                    producto['imagen_url'] = base64_to_image_data_uri(
+                        producto['imagen']['data'],
+                        producto['imagen'].get('content_type', 'image/jpeg')
+                    )
+                else:
+                    # Diccionario pero sin data
+                    producto['imagen_url'] = get_default_product_image_base64()
+            # Caso 2: imagen es un string con URL (formato antiguo)
+            elif isinstance(producto['imagen'], str):
+                producto['imagen_url'] = producto['imagen']
+            else:
+                # Formato desconocido
+                producto['imagen_url'] = get_default_product_image_base64()
+        else:
+            # Sin imagen
+            producto['imagen_url'] = get_default_product_image_base64()
     
     # Obtener cantidad de items en carrito
     carrito = carrito_collection.find_one({'usuario_id': request.user.id})
@@ -368,7 +420,6 @@ def guardar_comentario(request):
                 estado='activo'
             )
             
-            # ✅ REGISTRAR AUDITORÍA
             registrar_auditoria(
                 accion='CREAR_COMENTARIO',
                 usuario_email=request.user.email,
@@ -403,18 +454,17 @@ def todos_comentarios(request):
 
 
 # ==========================================
-# 👤 PERFIL
+# 👤 PERFIL CON AVATAR BASE64
 # ==========================================
 
 @login_required
 def mi_cuenta(request):
-    """Vista de perfil del usuario"""
+    """Vista de perfil del usuario con avatar"""
     if request.method == 'POST':
         form = PerfilForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             
-            # ✅ REGISTRAR AUDITORÍA
             registrar_auditoria(
                 accion='ACTUALIZAR_PERFIL',
                 usuario_email=request.user.email,
@@ -431,17 +481,91 @@ def mi_cuenta(request):
     else:
         form = PerfilForm(instance=request.user)
     
+    # Obtener usuario de MongoDB
+    try:
+        usuario_mongo = usuarios_collection.find_one({'usuario_id': request.user.id})
+        
+        if usuario_mongo:
+            # Preparar avatar
+            if usuario_mongo.get('avatar') and usuario_mongo['avatar'].get('data'):
+                usuario_mongo['avatar_url'] = base64_to_image_data_uri(
+                    usuario_mongo['avatar']['data'],
+                    usuario_mongo['avatar'].get('content_type', 'image/jpeg')
+                )
+            else:
+                usuario_mongo['avatar_url'] = get_default_avatar_base64()
+        else:
+            # Crear documento de usuario en MongoDB si no existe
+            usuario_mongo = {
+                'usuario_id': request.user.id,
+                'email': request.user.email,
+                'avatar_url': get_default_avatar_base64()
+            }
+    except Exception as e:
+        print(f"Error al obtener usuario de MongoDB: {e}")
+        usuario_mongo = {
+            'avatar_url': get_default_avatar_base64()
+        }
+    
     mis_comentarios = Comentario.objects.filter(
         usuario=request.user
     ).order_by('-fecha')
     
     context = {
         'usuario': request.user,
+        'usuario_mongo': usuario_mongo,
         'form': form,
         'mis_comentarios': mis_comentarios
     }
     
     return render(request, 'mi_cuenta.html', context)
+
+
+@login_required
+def actualizar_avatar(request):
+    """Actualizar avatar del usuario"""
+    if request.method == 'POST' and 'avatar' in request.FILES:
+        try:
+            avatar = request.FILES['avatar']
+            
+            # Convertir avatar a base64 (máx 300x300px, calidad 90%)
+            resultado = image_to_base64(avatar, max_size=(300, 300), quality=90)
+            
+            if resultado:
+                # Actualizar o crear documento del usuario en MongoDB
+                usuarios_collection.update_one(
+                    {'usuario_id': request.user.id},
+                    {
+                        '$set': {
+                            'email': request.user.email,
+                            'avatar': {
+                                'data': resultado['data'],
+                                'content_type': resultado['content_type']
+                            },
+                            'avatar_actualizado': datetime.now()
+                        }
+                    },
+                    upsert=True  # Crear si no existe
+                )
+                
+                registrar_auditoria(
+                    accion='ACTUALIZAR_AVATAR',
+                    usuario_email=request.user.email,
+                    detalle='Avatar actualizado exitosamente',
+                    datos_adicionales={
+                        'usuario_id': request.user.id
+                    }
+                )
+                
+                messages.success(request, '✅ Avatar actualizado exitosamente')
+            else:
+                messages.error(request, 'Error al procesar la imagen del avatar')
+                
+        except Exception as e:
+            print(f"❌ Error al actualizar avatar: {e}")
+            messages.error(request, f'Error al actualizar avatar: {str(e)}')
+    
+    return redirect('mi_cuenta')
 
 
 # ==========================================
@@ -450,7 +574,7 @@ def mi_cuenta(request):
 
 @login_required
 def ver_carrito(request):
-    """Vista del carrito de compras"""
+    """Vista del carrito - SOPORTA AMBOS FORMATOS DE IMAGEN"""
     carrito = carrito_collection.find_one({'usuario_id': request.user.id})
     
     if not carrito:
@@ -461,6 +585,22 @@ def ver_carrito(request):
             'fecha_actualizacion': datetime.now()
         }
         carrito_collection.insert_one(carrito)
+    
+    # Preparar imágenes de productos en el carrito
+    for item in carrito.get('productos', []):
+        # ✅ MANEJAR AMBOS FORMATOS DE IMAGEN EN CARRITO
+        if item.get('imagen'):
+            if isinstance(item['imagen'], dict) and item['imagen'].get('data'):
+                item['imagen_url'] = base64_to_image_data_uri(
+                    item['imagen']['data'],
+                    item['imagen'].get('content_type', 'image/jpeg')
+                )
+            elif isinstance(item['imagen'], str):
+                item['imagen_url'] = item['imagen']
+            else:
+                item['imagen_url'] = get_default_product_image_base64()
+        else:
+            item['imagen_url'] = get_default_product_image_base64()
     
     # Calcular totales
     subtotal = sum(item['precio'] * item['cantidad'] for item in carrito.get('productos', []))
@@ -482,7 +622,7 @@ def ver_carrito(request):
 
 @login_required
 def agregar_al_carrito(request, producto_id):
-    """Agrega un producto al carrito"""
+    """Agrega un producto al carrito con imagen"""
     if request.method == 'POST':
         cantidad = int(request.POST.get('cantidad', 1))
         
@@ -527,7 +667,7 @@ def agregar_al_carrito(request, producto_id):
                 'nombre': producto['nombre'],
                 'precio': float(producto['precio']),
                 'cantidad': cantidad,
-                'imagen': producto['imagen']
+                'imagen': producto.get('imagen', {})  # Incluir imagen completa
             })
         
         carrito['fecha_actualizacion'] = datetime.now()
@@ -541,7 +681,6 @@ def agregar_al_carrito(request, producto_id):
         else:
             carrito_collection.insert_one(carrito)
         
-        # ✅ REGISTRAR AUDITORÍA
         registrar_auditoria(
             accion='AGREGAR_CARRITO',
             usuario_email=request.user.email,
@@ -580,7 +719,6 @@ def remover_del_carrito(request, producto_id):
             {'$set': carrito}
         )
         
-        # ✅ REGISTRAR AUDITORÍA
         if producto_removido:
             registrar_auditoria(
                 accion='REMOVER_CARRITO',
@@ -653,7 +791,6 @@ def vaciar_carrito(request):
         }}
     )
     
-    # ✅ REGISTRAR AUDITORÍA
     registrar_auditoria(
         accion='VACIAR_CARRITO',
         usuario_email=request.user.email,
@@ -738,7 +875,6 @@ def procesar_compra(request):
         # Guardar venta
         resultado = ventas_collection.insert_one(venta)
         
-        # ✅ REGISTRAR AUDITORÍA DE VENTA
         registrar_auditoria(
             accion='CREAR_VENTA',
             usuario_email=request.user.email,
@@ -759,7 +895,6 @@ def procesar_compra(request):
                 {'$inc': {'stock': -item['cantidad']}}
             )
             
-            # ✅ REGISTRAR AUDITORÍA DE ACTUALIZACIÓN DE STOCK
             registrar_auditoria(
                 accion='ACTUALIZAR_STOCK',
                 usuario_email=request.user.email,
@@ -1229,7 +1364,7 @@ def ver_auditoria(request):
     
     top_acciones_raw = list(auditoria_collection.aggregate(pipeline))
     
-    # ✅ Convertir _id a nombre para usar en template
+    # Convertir _id a nombre para usar en template
     top_acciones = []
     for accion in top_acciones_raw:
         top_acciones.append({

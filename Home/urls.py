@@ -54,4 +54,6 @@ urlpatterns = [
     # 📋 AUDITORÍA (ADMIN)
     # ==========================================
     path('auditoria/', views.ver_auditoria, name='ver_auditoria'),
+
+    path('cuenta/actualizar-avatar/', views.actualizar_avatar, name='actualizar_avatar'),
 ]
