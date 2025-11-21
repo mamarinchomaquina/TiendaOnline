@@ -7,9 +7,16 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-tu-secret-key-aqui'
-DEBUG = True
-ALLOWED_HOSTS = []
+# ==========================================
+# 🔥 SEGURIDAD - VARIABLES DE ENTORNO
+# ==========================================
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-secret-key-aqui')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Para Render
+if 'RENDER' in os.environ:
+    ALLOWED_HOSTS.append('.onrender.com')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,6 +35,7 @@ AUTH_USER_MODEL = 'Home.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ WhiteNoise para archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,8 +77,8 @@ DATABASES = {
 # ==========================================
 # 🔥 CONFIGURACIÓN MONGODB ATLAS CON PYMONGO
 # ==========================================
-MONGODB_URI = 'mongodb+srv://mamarin:mamarin30@cluster0.hhtibs9.mongodb.net/'
-MONGODB_NAME = 'Tienda_Online'
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb+srv://mamarin:mamarin30@cluster0.hhtibs9.mongodb.net/')
+MONGODB_NAME = os.environ.get('MONGODB_NAME', 'Tienda_Online')
 
 # Cliente de MongoDB con manejo de errores
 try:
@@ -119,10 +127,15 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# ==========================================
+# 🔥 ARCHIVOS ESTÁTICOS (WhiteNoise)
+# ==========================================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'Home' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -144,3 +157,17 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
+
+# ==========================================
+# 🔥 CONFIGURACIÓN DE SEGURIDAD (PRODUCCIÓN)
+# ==========================================
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
