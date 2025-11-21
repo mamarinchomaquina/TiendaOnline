@@ -131,8 +131,13 @@ USE_TZ = True
 # 🔥 ARCHIVOS ESTÁTICOS (WhiteNoise)
 # ==========================================
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'Home' / 'static']
+
+# Crear directorio si no existe
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+if not os.path.exists(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT)
+
+STATICFILES_DIRS = [BASE_DIR / 'Home' / 'static']
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
